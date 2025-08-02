@@ -1,0 +1,248 @@
+# Deployment Plan Template
+
+metadata:
+  name: "deployment-name"
+  version: "1.0.0"
+  created_date: "YYYY-MM-DD"
+  created_by: "CDTZ/CCN/CCW"
+  status: "draft/active/completed/failed"
+  risk_level: "low/medium/high"
+  estimated_duration: "30 minutes"
+
+description:
+  overview: "Brief description of what this deployment accomplishes"
+  scope: "Which services, machines, and systems are affected"
+  business_value: "Why this deployment is needed"
+  success_criteria:
+    - "Specific measurable outcome 1"
+    - "Specific measurable outcome 2"
+    - "Specific measurable outcome 3"
+
+environment:
+  target_machines:
+    - name: "nucdogg"
+      role: "coordination and core services"
+      resources_required:
+        cpu: "2 cores"
+        memory: "4GB"
+        disk: "20GB"
+    - name: "workdogg"
+      role: "processing and development"
+      resources_required:
+        cpu: "4 cores"
+        memory: "8GB"
+        disk: "30GB"
+  
+  networks:
+    - name: "coordination_net"
+      type: "overlay"
+      purpose: "Inter-service communication"
+    - name: "isolated_dev_net"
+      type: "bridge"
+      purpose: "Development environment isolation"
+
+prerequisites:
+  system_requirements:
+    - "Docker Swarm initialized"
+    - "Required secrets created"
+    - "Network connectivity verified"
+  
+  dependencies:
+    - deployment: "foundation-infrastructure"
+      status: "completed"
+      reason: "Base infrastructure required"
+  
+  timeshift_snapshots:
+    - machine: "nucdogg"
+      snapshot_name: "pre-deployment-{timestamp}"
+    - machine: "workdogg"
+      snapshot_name: "pre-deployment-{timestamp}"
+
+coordination:
+  planning_instance: "CDTZ"
+  execution_instances:
+    - "CCN"
+    - "CCW"
+  
+  communication_method: "github-actions-coordination"
+  state_sharing: "github-issues-and-comments"
+  
+  checkpoint_intervals: "after each major step"
+  failure_escalation: "halt deployment, notify all instances"
+
+deployment_steps:
+  - name: "prepare_environment"
+    assigned_to: "CCN"
+    description: "Create necessary volumes, networks, and prepare host environment"
+    estimated_duration: "5 minutes"
+    dependencies: []
+    github_coordination:
+      trigger_event: "ccn-deployment-task"
+      task_name: "prepare_environment"
+    validation:
+      - "Docker networks created successfully"
+      - "Volumes mounted and accessible"
+    rollback_actions:
+      - "Remove created networks"
+      - "Remove created volumes"
+  
+  - name: "deploy_core_services"
+    assigned_to: "CCN"
+    description: "Deploy the main application services"
+    estimated_duration: "10 minutes"
+    dependencies: ["prepare_environment"]
+    github_coordination:
+      trigger_event: "ccn-deployment-task"
+      task_name: "deploy_core_services"
+    validation:
+      - "All containers healthy"
+      - "Service endpoints responding"
+    rollback_actions:
+      - "Stop and remove services"
+      - "Clean up configurations"
+  
+  - name: "configure_integrations"
+    assigned_to: "CCW"
+    description: "Set up external API connections and integrations"
+    estimated_duration: "10 minutes"
+    dependencies: ["deploy_core_services"]
+    github_coordination:
+      trigger_event: "ccw-deployment-task"
+      task_name: "configure_integrations"
+    validation:
+      - "External APIs accessible"
+      - "Authentication successful"
+      - "Test requests successful"
+    rollback_actions:
+      - "Revert integration configurations"
+      - "Remove API connections"
+  
+  - name: "validate_deployment"
+    assigned_to: "CCN"
+    description: "Run comprehensive validation and health checks"
+    estimated_duration: "5 minutes"
+    dependencies: ["configure_integrations"]
+    github_coordination:
+      trigger_event: "ccn-deployment-task"
+      task_name: "validate_deployment"
+    validation:
+      - "End-to-end workflows functional"
+      - "Monitoring active"
+      - "All health checks passing"
+    rollback_actions:
+      - "Document validation failures"
+      - "Prepare for full rollback if needed"
+
+external_integrations:
+  asana:
+    required: true
+    access_method: "github-secrets-proxy"
+    validation:
+      - "Can list projects"
+      - "Can create tasks"
+  
+  github:
+    required: true
+    access_method: "github-actions-native"
+    validation:
+      - "Can access repositories"
+      - "Can trigger actions"
+  
+  google_workspace:
+    required: false
+    access_method: "oauth-flow"
+    validation:
+      - "Gmail access functional"
+      - "Calendar integration working"
+
+monitoring:
+  health_checks:
+    - endpoint: "http://service:port/health"
+      expected_status: 200
+      check_interval: "30 seconds"
+  
+  metrics_collection:
+    - cpu_usage
+    - memory_usage
+    - container_status
+    - api_response_times
+  
+  alerting:
+    failure_threshold: "2 consecutive failures"
+    notification_method: "github-issue-comments"
+
+rollback_plan:
+  trigger_conditions:
+    - "Any step validation fails"
+    - "External integrations unreachable"
+    - "System resources exceeded"
+    - "Manual rollback requested via GitHub comment"
+  
+  rollback_steps:
+    - name: "stop_new_services"
+      description: "Stop all newly deployed services"
+      estimated_duration: "2 minutes"
+    
+    - name: "restore_previous_state"
+      description: "Restore from Timeshift snapshot if needed"
+      estimated_duration: "10 minutes"
+    
+    - name: "validate_rollback"
+      description: "Ensure system is back to previous working state"
+      estimated_duration: "5 minutes"
+  
+  recovery_time_objective: "15 minutes"
+  data_loss_tolerance: "none - all state preserved"
+
+testing_strategy:
+  pre_deployment:
+    - "Validate all deployment files"
+    - "Check resource availability"
+    - "Verify external connectivity"
+  
+  during_deployment:
+    - "Step-by-step validation"
+    - "Real-time monitoring via GitHub"
+    - "Automated health checks"
+  
+  post_deployment:
+    - "End-to-end workflow testing"
+    - "Performance validation"
+    - "Security verification"
+    - "Documentation updates"
+
+documentation_updates:
+  - file: "README.md"
+    changes: "Update with new service access information"
+  - file: "documentation/operations/service-inventory.md"
+    changes: "Add new services to inventory"
+  - file: "planning/deployment-plans/completed/"
+    changes: "Move this plan to completed with results"
+
+lessons_learned:
+  # To be filled in after deployment
+  what_worked_well: []
+  what_could_be_improved: []
+  unexpected_challenges: []
+  recommendations_for_future: []
+
+approval:
+  required_approvals:
+    - "CDTZ planning review"
+    - "Resource allocation confirmed"
+    - "Backup strategy verified"
+  
+  approved_by: ""
+  approved_date: ""
+  deployment_authorized: false
+
+execution_log:
+  # To be filled in during deployment
+  github_workflow_run: ""
+  deployment_issue: ""
+  start_time: ""
+  end_time: ""
+  actual_duration: ""
+  steps_completed: []
+  issues_encountered: []
+  final_status: ""
