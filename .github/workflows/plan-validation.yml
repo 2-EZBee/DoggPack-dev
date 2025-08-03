@@ -1,0 +1,50 @@
+name: Plan Validation
+
+on:
+  pull_request:
+    paths:
+      - 'planning/**'
+  push:
+    paths:
+      - 'planning/**'
+
+jobs:
+  validate-plans:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install validation tools
+        run: |
+          pip install yamllint
+          npm install -g markdownlint-cli
+      
+      - name: Validate YAML Plans
+        run: |
+          find planning/ -name "*.yml" -o -name "*.yaml" | xargs yamllint
+      
+      - name: Validate Markdown
+        run: |
+          find planning/ -name "*.md" | xargs markdownlint
+      
+      - name: Check Plan Structure
+        run: |
+          # Basic structure validation
+          echo "Checking deployment plans..."
+          for plan in planning/deployment-plans/active/*.yml; do
+            if [ -f "$plan" ]; then
+              echo "✓ Found deployment plan: $(basename $plan)"
+            fi
+          done
+          
+          echo "Checking ADR structure..."
+          for adr in planning/decisions/*.md; do
+            if [ -f "$adr" ]; then
+              echo "✓ Found ADR: $(basename $adr)"
+            fi
+          done

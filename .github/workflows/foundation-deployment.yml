@@ -1,0 +1,171 @@
+name: Foundation Infrastructure Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_plan:
+        description: 'Deployment plan file path'
+        required: true
+        default: 'planning/deployment-plans/active/foundation-infrastructure-2025-08-02.yml'
+      target_environment:
+        description: 'Target environment'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+
+  issue_comment:
+    types: [created]
+
+jobs:
+  validate-deployment:
+    if: startsWith(github.event.comment.body, '/deploy') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    outputs:
+      plan-valid: ${{ steps.validate.outputs.valid }}
+      deployment-id: ${{ steps.create-id.outputs.id }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create Deployment ID
+        id: create-id
+        run: |
+          DEPLOYMENT_ID="deploy-$(date +%Y%m%d-%H%M%S)-${{ github.run_number }}"
+          echo "id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+          echo "🚀 Created deployment ID: $DEPLOYMENT_ID"
+      
+      - name: Validate Deployment Plan
+        id: validate
+        run: |
+          PLAN_FILE="${{ github.event.inputs.deployment_plan || 'planning/deployment-plans/active/foundation-infrastructure-2025-08-02.yml' }}"
+          
+          if [ ! -f "$PLAN_FILE" ]; then
+            echo "❌ Deployment plan not found: $PLAN_FILE"
+            echo "valid=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          # Basic YAML validation
+          if command -v yamllint &> /dev/null; then
+            yamllint "$PLAN_FILE"
+          fi
+          
+          echo "✅ Deployment plan validated"
+          echo "valid=true" >> $GITHUB_OUTPUT
+      
+      - name: Create Deployment Issue
+        if: steps.validate.outputs.valid == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deploymentId = '${{ steps.create-id.outputs.id }}';
+            const planFile = '${{ github.event.inputs.deployment_plan || 'planning/deployment-plans/active/foundation-infrastructure-2025-08-02.yml' }}';
+            
+            const { data: issue } = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚀 Foundation Deployment: ${deploymentId}`,
+              body: `
+## Deployment Status: 🟡 IN PROGRESS
+
+**Deployment ID**: \`${deploymentId}\`
+**Plan**: \`${planFile}\`
+**Triggered by**: @${context.actor}
+**Environment**: ${{ github.event.inputs.target_environment || 'development' }}
+
+## Tasks
+
+### Phase 1: Preparation
+- [ ] **CCN**: Validate NucDogg prerequisites
+- [ ] **CCW**: Validate WorkDogg prerequisites  
+- [ ] **Timeshift**: Create system snapshots
+
+### Phase 2: Foundation Infrastructure
+- [ ] **CCN**: Initialize Docker Swarm
+- [ ] **CCN**: Create foundation networks and secrets
+- [ ] **CCN**: Deploy MCP coordination servers
+
+### Phase 3: Development Environments  
+- [ ] **CCW**: Build isolated development containers
+- [ ] **CCN**: Configure inter-service networking
+- [ ] **Both**: Validate Claude MCP connections
+
+### Phase 4: Validation
+- [ ] **CCN**: End-to-end workflow testing
+- [ ] **CCW**: External API connectivity testing
+- [ ] **CDTZ**: Final coordination validation
+
+## Instructions for CCN/CCW
+
+**CCN (NucDogg)**: Watch this issue and execute tasks assigned to CCN
+**CCW (WorkDogg)**: Watch this issue and execute tasks assigned to CCW
+
+Comment with your progress using:
+- \`/task-complete <task-name>\` when you finish a task
+- \`/task-failed <task-name> <reason>\` if a task fails
+- \`/status\` for current status
+
+## Rollback
+
+If anything goes wrong, comment \`/rollback\` to trigger emergency rollback procedures.
+              `,
+              labels: ['deployment', 'in-progress', 'foundation']
+            });
+            
+            console.log(`Created deployment issue #${issue.data.number}`);
+
+  assign-tasks:
+    needs: validate-deployment
+    if: needs.validate-deployment.outputs.plan-valid == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Notify CCN (NucDogg)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Create a repository dispatch event that CCN will listen for
+            await github.rest.repos.createDispatchEvent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              event_type: 'ccn-deployment-task',
+              client_payload: {
+                deployment_id: '${{ needs.validate-deployment.outputs.deployment-id }}',
+                tasks: [
+                  'validate_nucdogg_prerequisites',
+                  'create_timeshift_snapshot',
+                  'initialize_docker_swarm',
+                  'create_foundation_networks',
+                  'setup_secrets_management',
+                  'deploy_coordination_servers'
+                ],
+                machine: 'nucdogg'
+              }
+            });
+      
+      - name: Notify CCW (WorkDogg)  
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createDispatchEvent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              event_type: 'ccw-deployment-task',
+              client_payload: {
+                deployment_id: '${{ needs.validate-deployment.outputs.deployment-id }}',
+                tasks: [
+                  'validate_workdogg_prerequisites',
+                  'create_timeshift_snapshot',
+                  'build_isolated_dev_environments',
+                  'configure_claude_mcp_connections',
+                  'validate_external_api_access'
+                ],
+                machine: 'workdogg'
+              }
+            });
