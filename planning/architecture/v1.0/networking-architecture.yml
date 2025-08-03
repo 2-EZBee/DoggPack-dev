@@ -1,0 +1,658 @@
+metadata:
+  name: "doggpack-networking-architecture"
+  version: "1.0.0"
+  created_date: "2025-08-03"
+  created_by: "CDTZ"
+  status: "planning"
+  purpose: "Comprehensive networking map for DoggPack ecosystem to prevent conflicts and ease deployment"
+
+# DoggPack Comprehensive Networking Architecture
+
+## Network Infrastructure Overview
+
+### Physical Network Layout
+```
+Internet (Aussie Broadband)
+    ↓
+Router/Gateway (192.168.x.1) - VPN Server
+    ↓
+Managed Switch (VLAN Capable)
+    ├── VLAN 10: Infrastructure (192.168.10.0/24)
+    │   ├── NasDogg (192.168.10.40) - DNS, Storage, NFS
+    │   ├── NucDogg (192.168.10.50) - Docker Swarm Manager, MCP Hub
+    │   ├── WorkDogg (192.168.10.51) - Docker Swarm Worker, Development
+    │   └── ZenDogg (192.168.10.52) - Control Interface, Windows Apps
+    ├── VLAN 20: SmartHome (192.168.20.0/24)
+    ├── VLAN 30: Gaming (192.168.30.0/24)
+    └── VLAN 40: Personal (192.168.40.0/24)
+```
+
+## IP Address Allocation Map
+
+### Static IP Assignments (VLAN 10 - Infrastructure)
+```yaml
+infrastructure_ips:
+  # Core Infrastructure
+  "192.168.10.1":   "Gateway/Router"
+  "192.168.10.40":  "NasDogg (Synology DS214play)"
+  "192.168.10.50":  "NucDogg (Infrastructure Hub)"
+  "192.168.10.51":  "WorkDogg (Development Machine)"
+  "192.168.10.52":  "ZenDogg (Primary Workstation)"
+  
+  # Service Virtual IPs (Docker Swarm Services)
+  "192.168.10.100": "MCP Coordination Cluster VIP"
+  "192.168.10.101": "API Gateway Cluster VIP"
+  "192.168.10.102": "Monitoring Stack VIP"
+  "192.168.10.103": "N8N Automation VIP"
+  "192.168.10.104": "Development Tools VIP"
+  "192.168.10.105": "Media Services VIP"
+  
+  # Reserved for expansion
+  "192.168.10.110-120": "Future Infrastructure Services"
+```
+
+### DHCP Ranges by VLAN
+```yaml
+dhcp_ranges:
+  vlan_10_infrastructure: "192.168.10.200-250"  # Temporary/dynamic devices
+  vlan_20_smarthome:     "192.168.20.100-200"  # IoT devices
+  vlan_30_gaming:        "192.168.30.100-200"  # Gaming consoles
+  vlan_40_personal:      "192.168.40.100-200"  # Personal devices/guests
+```
+
+## Port Allocation Matrix
+
+### System-Level Ports (Host Machines)
+```yaml
+system_ports:
+  # SSH Access
+  nucdogg_ssh:   2222
+  workdogg_ssh:  2223
+  
+  # RDP Access  
+  nucdogg_rdp:   3390  # External port forwarding
+  workdogg_rdp:  3391  # External port forwarding
+  zendogg_rdp:   3392  # External port forwarding
+  
+  # Docker Swarm Communication
+  swarm_management: 2377    # Manager nodes
+  swarm_nodes:      7946    # Node communication
+  swarm_overlay:    4789    # Overlay network
+  docker_api:       2376    # Docker Remote API
+  
+  # Network Services
+  vpn_server:       1194    # OpenVPN UDP
+  dns_server:       53      # Local DNS on NasDogg
+  web_proxy:        80      # HTTP proxy/redirect
+  web_secure:       443     # HTTPS services
+```
+
+### Application Service Ports
+```yaml
+application_ports:
+  # MCP Servers (8000-8099 range)
+  mcp_planning_coordinator: 8100
+  mcp_docker_management:    8001
+  mcp_system_monitoring:    8002
+  mcp_api_gateway:         8200
+  mcp_workflow_automation:  8003
+  mcp_knowledge_management: 8004
+  
+  # Core Services (5000-5999 range)
+  n8n_automation:          5678
+  n8n_webhooks:           5679
+  obsidian_sync:          5000
+  obsidian_livesync:      5984  # CouchDB compatible
+  
+  # Monitoring Stack (9000-9999 range)
+  prometheus:             9090
+  grafana:               3000
+  node_exporter:         9100
+  cadvisor:              8080
+  alertmanager:          9093
+  
+  # Development Tools (4000-4999 range)
+  code_server:           4000
+  jupyter_lab:           4001
+  git_server:            4002
+  registry:              4003
+  
+  # Media & File Services (3000-3999 range)
+  jellyfin:              3001
+  filebrowser:           3002
+  webdav:                3003
+  photoprism:            3004
+  
+  # VNC/Remote Desktop (5900+ range)
+  vnc_nucdogg:           5901
+  vnc_workdogg:          5902
+  vnc_development:       5903
+  
+  # Database Services (Port offsets to avoid conflicts)
+  postgres_main:         5432
+  redis_cache:           6379
+  influxdb:              8086
+  mongodb:               27017
+```
+
+## Domain and Subdomain Mapping
+
+### Internal Domains (*.doggpack.local)
+```yaml
+internal_domains:
+  # Machine FQDNs
+  "nasdogg.doggpack.local":   "192.168.10.40"
+  "nucdogg.doggpack.local":   "192.168.10.50"
+  "workdogg.doggpack.local":  "192.168.10.51"
+  "zendogg.doggpack.local":   "192.168.10.52"
+  
+  # Service Discovery
+  "mcp.doggpack.local":       "192.168.10.100"  # MCP Load Balancer
+  "api.doggpack.local":       "192.168.10.101"  # API Gateway
+  "monitor.doggpack.local":   "192.168.10.102"  # Monitoring
+  "automation.doggpack.local": "192.168.10.103" # N8N
+  "dev.doggpack.local":       "192.168.10.104"  # Development Tools
+  "media.doggpack.local":     "192.168.10.105"  # Media Services
+  
+  # Docker Swarm Services
+  "docker.doggpack.local":    "192.168.10.50"   # Swarm Manager
+  "registry.doggpack.local":  "192.168.10.50"   # Docker Registry
+  
+  # Application-Specific
+  "grafana.doggpack.local":   "192.168.10.102"
+  "prometheus.doggpack.local": "192.168.10.102"
+  "n8n.doggpack.local":       "192.168.10.103"
+  "obsidian.doggpack.local":  "192.168.10.103"
+  "code.doggpack.local":      "192.168.10.104"
+  "files.doggpack.local":     "192.168.10.105"
+```
+
+### External Domains (*.doggpack.net)
+```yaml
+external_domains:
+  # Primary Access
+  "doggpack.net":             "Dynamic IP"      # Main site/dashboard
+  "home.doggpack.net":        "Dynamic IP"      # Home network gateway
+  "vpn.doggpack.net":         "Dynamic IP"      # VPN endpoint (not proxied)
+  
+  # Service Access (through Cloudflare)
+  "mcp.doggpack.net":         "home.doggpack.net"    # MCP API Gateway
+  "monitor.doggpack.net":     "home.doggpack.net"    # Monitoring Dashboard
+  "auto.doggpack.net":        "home.doggpack.net"    # N8N Automation
+  "dev.doggpack.net":         "home.doggpack.net"    # Development Tools
+  "files.doggpack.net":       "home.doggpack.net"    # File Management
+  
+  # Remote Access
+  "remote.doggpack.net":      "home.doggpack.net"    # Remote desktop portal
+  "ssh.doggpack.net":         "home.doggpack.net"    # SSH gateway
+```
+
+## Docker Networking Architecture
+
+### Docker Networks
+```yaml
+docker_networks:
+  # Overlay Networks (Swarm-wide)
+  coordination_net:
+    driver: "overlay"
+    subnet: "10.10.0.0/16"
+    purpose: "MCP server communication"
+    encrypted: true
+    
+  application_net:
+    driver: "overlay" 
+    subnet: "10.20.0.0/16"
+    purpose: "Application services"
+    encrypted: false
+    
+  monitoring_net:
+    driver: "overlay"
+    subnet: "10.30.0.0/16"
+    purpose: "Monitoring and logging"
+    encrypted: false
+    
+  database_net:
+    driver: "overlay"
+    subnet: "10.40.0.0/16" 
+    purpose: "Database services"
+    encrypted: true
+    
+  # Bridge Networks (Single host)
+  development_net:
+    driver: "bridge"
+    subnet: "172.20.0.0/16"
+    purpose: "Development containers"
+    
+  isolated_net:
+    driver: "bridge"
+    subnet: "172.30.0.0/16"
+    purpose: "Isolated testing"
+```
+
+### Service Network Assignments
+```yaml
+service_networks:
+  mcp_services:
+    networks: ["coordination_net", "application_net"]
+    services: ["planning-coordinator", "docker-management", "system-monitoring"]
+    
+  core_applications:
+    networks: ["application_net", "database_net"]
+    services: ["n8n", "obsidian-sync", "api-gateway"]
+    
+  monitoring_stack:
+    networks: ["monitoring_net", "application_net"]
+    services: ["prometheus", "grafana", "alertmanager"]
+    
+  development_tools:
+    networks: ["development_net", "application_net"]
+    services: ["code-server", "jupyter", "git-server"]
+```
+
+## Port Forwarding Rules
+
+### Router Port Forwarding Configuration
+```yaml
+port_forwarding:
+  # VPN Access
+  - external_port: 1194
+    internal_ip: "192.168.10.1"
+    internal_port: 1194
+    protocol: "UDP"
+    description: "OpenVPN Server"
+    
+  # SSH Access
+  - external_port: 2222
+    internal_ip: "192.168.10.50"
+    internal_port: 2222
+    protocol: "TCP"
+    description: "NucDogg SSH"
+    
+  - external_port: 2223
+    internal_ip: "192.168.10.51"
+    internal_port: 2223
+    protocol: "TCP"
+    description: "WorkDogg SSH"
+    
+  # RDP Access (Emergency Only)
+  - external_port: 3390
+    internal_ip: "192.168.10.50"
+    internal_port: 3389
+    protocol: "TCP"
+    description: "NucDogg RDP"
+    
+  - external_port: 3391
+    internal_ip: "192.168.10.51"
+    internal_port: 3389
+    protocol: "TCP"
+    description: "WorkDogg RDP"
+    
+  - external_port: 3392
+    internal_ip: "192.168.10.52"
+    internal_port: 3389
+    protocol: "TCP"
+    description: "ZenDogg RDP"
+    
+  # Web Services (through reverse proxy)
+  - external_port: 80
+    internal_ip: "192.168.10.101"
+    internal_port: 80
+    protocol: "TCP"
+    description: "HTTP Services"
+    
+  - external_port: 443
+    internal_ip: "192.168.10.101"
+    internal_port: 443
+    protocol: "TCP"
+    description: "HTTPS Services"
+```
+
+## Service Discovery Configuration
+
+### Docker Swarm Service Discovery
+```yaml
+service_discovery:
+  # Automatic DNS resolution within overlay networks
+  mcp_coordination:
+    endpoint: "tasks.mcp-planning-coordinator"
+    port: 8100
+    health_check: "/health"
+    
+  api_gateway:
+    endpoint: "tasks.api-gateway"
+    port: 8200
+    health_check: "/health"
+    
+  n8n_automation:
+    endpoint: "tasks.n8n"
+    port: 5678
+    health_check: "/healthz"
+    
+  monitoring:
+    prometheus: "tasks.prometheus:9090"
+    grafana: "tasks.grafana:3000"
+    alertmanager: "tasks.alertmanager:9093"
+```
+
+### Load Balancer Configuration
+```yaml
+load_balancer:
+  # HAProxy/Traefik configuration for service distribution
+  mcp_services:
+    algorithm: "round_robin"
+    health_check: "GET /health"
+    backends:
+      - "mcp-coordinator-1:8100"
+      - "mcp-coordinator-2:8100"
+    
+  web_services:
+    algorithm: "least_conn"
+    ssl_termination: true
+    backends:
+      - "api-gateway-1:8200"
+      - "api-gateway-2:8200"
+```
+
+## Docker Stack Configurations
+
+### Foundation Stack (MCP + Core Services)
+```yaml
+# foundation-stack.yml
+version: '3.8'
+
+networks:
+  coordination_net:
+    driver: overlay
+    encrypted: true
+    ipam:
+      config:
+        - subnet: 10.10.0.0/16
+  
+  application_net:
+    driver: overlay
+    ipam:
+      config:
+        - subnet: 10.20.0.0/16
+
+services:
+  mcp-planning-coordinator:
+    image: doggpack/mcp-planning-coordinator:latest
+    networks:
+      - coordination_net
+    ports:
+      - "8100:8100"
+    deploy:
+      replicas: 2
+      placement:
+        constraints: [node.role == manager]
+    environment:
+      - MCP_PORT=8100
+      - DATABASE_URL=postgres://coordination_net/postgres:5432
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  api-gateway:
+    image: doggpack/api-gateway:latest
+    networks:
+      - application_net
+      - coordination_net
+    ports:
+      - "8200:8200"
+    deploy:
+      replicas: 2
+      placement:
+        constraints: [node.role == manager]
+    environment:
+      - GATEWAY_PORT=8200
+      - UPSTREAM_MCP=mcp-planning-coordinator:8100
+```
+
+### Monitoring Stack
+```yaml
+# monitoring-stack.yml
+version: '3.8'
+
+networks:
+  monitoring_net:
+    driver: overlay
+    ipam:
+      config:
+        - subnet: 10.30.0.0/16
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    networks:
+      - monitoring_net
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_data:/prometheus
+    deploy:
+      placement:
+        constraints: [node.hostname == nucdogg]
+
+  grafana:
+    image: grafana/grafana:latest
+    networks:
+      - monitoring_net
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=secure_password
+    deploy:
+      placement:
+        constraints: [node.hostname == nucdogg]
+
+volumes:
+  prometheus_data:
+  grafana_data:
+```
+
+### Automation Stack
+```yaml
+# automation-stack.yml
+version: '3.8'
+
+networks:
+  application_net:
+    external: true
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    networks:
+      - application_net
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=secure_password
+      - WEBHOOK_URL=https://auto.doggpack.net
+    deploy:
+      placement:
+        constraints: [node.hostname == workdogg]
+
+volumes:
+  n8n_data:
+```
+
+## Reverse Proxy Configuration
+
+### Traefik Configuration
+```yaml
+# traefik-stack.yml
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v3.0
+    networks:
+      - application_net
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - traefik_certificates:/certificates
+    command:
+      - --api.dashboard=true
+      - --providers.docker.swarmMode=true
+      - --providers.docker.exposedByDefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.letsencrypt.acme.email=admin@doggpack.net
+      - --certificatesresolvers.letsencrypt.acme.storage=/certificates/acme.json
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.traefik.rule=Host(`traefik.doggpack.local`)"
+        - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+
+volumes:
+  traefik_certificates:
+```
+
+## Security Considerations
+
+### Firewall Rules by Service
+```yaml
+firewall_rules:
+  # Allow VPN access to all services
+  vpn_to_services:
+    source: "10.8.0.0/24"  # VPN client subnet
+    destination: "192.168.10.0/24"
+    action: "ALLOW"
+    
+  # Restrict external access to specific ports only
+  external_access:
+    allowed_ports: [80, 443, 1194, 2222, 2223, 3390, 3391, 3392]
+    action: "ALLOW"
+    log: true
+    
+  # Block inter-service access where not needed
+  isolation_rules:
+    - source: "10.20.0.0/16"  # Application net
+      destination: "10.40.0.0/16"  # Database net
+      ports: [5432, 6379, 27017]
+      action: "ALLOW"
+      
+    - source: "10.30.0.0/16"  # Monitoring net
+      destination: "10.20.0.0/16"  # Application net
+      ports: [9100, 8080]  # Metrics endpoints
+      action: "ALLOW"
+```
+
+### SSL/TLS Configuration
+```yaml
+ssl_configuration:
+  # Let's Encrypt certificates for external domains
+  external_certificates:
+    - "*.doggpack.net"
+    - "doggpack.net"
+    
+  # Self-signed certificates for internal services
+  internal_certificates:
+    - "*.doggpack.local"
+    
+  # SSL termination at reverse proxy
+  ssl_termination:
+    proxy: "traefik"
+    min_tls_version: "1.2"
+    ciphers: "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256"
+```
+
+## Deployment Order and Dependencies
+
+### Phase 1: Network Foundation
+```yaml
+deployment_order:
+  1. "Network segmentation (VLANs)"
+  2. "DNS server configuration"
+  3. "VPN server setup"
+  4. "Firewall rules implementation"
+```
+
+### Phase 2: Docker Infrastructure
+```yaml
+deployment_order:
+  1. "Docker Swarm initialization"
+  2. "Overlay network creation"
+  3. "Docker registry setup"
+  4. "Traefik reverse proxy"
+```
+
+### Phase 3: Core Services
+```yaml
+deployment_order:
+  1. "Foundation stack (MCP services)"
+  2. "Monitoring stack"
+  3. "Automation stack (N8N)"
+  4. "Development tools"
+```
+
+### Phase 4: Application Services
+```yaml
+deployment_order:
+  1. "Knowledge management (Obsidian)"
+  2. "Media services"
+  3. "File management"
+  4. "Custom applications"
+```
+
+## Monitoring and Health Checks
+
+### Service Health Monitoring
+```yaml
+health_checks:
+  mcp_services:
+    endpoint: "/health"
+    interval: "30s"
+    timeout: "10s"
+    retries: 3
+    
+  application_services:
+    endpoint: "/healthz"
+    interval: "60s"
+    timeout: "15s"
+    retries: 2
+    
+  infrastructure_services:
+    type: "tcp"
+    interval: "30s"
+    timeout: "5s"
+    retries: 3
+```
+
+### Port Conflict Prevention
+```yaml
+port_registry:
+  # Automated port allocation system
+  reserved_ranges:
+    system: "0-1023"
+    docker_swarm: "2376-2377, 4789, 7946"
+    mcp_services: "8000-8099"
+    monitoring: "9000-9999"
+    applications: "5000-5999"
+    development: "4000-4999"
+    media: "3000-3999"
+    vnc: "5900-5999"
+    
+  allocation_strategy: "automatic_increment"
+  conflict_resolution: "error_and_suggest_alternative"
+```
+
+This comprehensive networking architecture ensures no port conflicts, provides clear service discovery, and enables easy deployment through Docker stacks while maintaining security and scalability.
