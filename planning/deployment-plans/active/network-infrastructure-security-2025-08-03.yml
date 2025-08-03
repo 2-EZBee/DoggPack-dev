@@ -1,0 +1,539 @@
+metadata:
+  name: "network-infrastructure-security"
+  version: "1.0.0"
+  created_date: "2025-08-03"
+  created_by: "CDTZ"
+  status: "draft"
+  risk_level: "medium"
+  estimated_duration: "2-3 hours"
+
+description:
+  overview: "Secure and optimize home network infrastructure with VPN, DNS, domain management, network segmentation, and remote access capabilities"
+  scope: "Router configuration, VPN setup, DNS server deployment, Cloudflare integration, network segmentation, RDP configuration"
+  business_value: "Enhanced security, remote access capabilities, local service optimization, and foundation for DoggPack ecosystem"
+  success_criteria:
+    - "Secure VPN access to home network from anywhere"
+    - "Local DNS server operational with custom domains"
+    - "Network properly segmented for security"
+    - "RDP access configured for all Windows machines"
+    - "Cloudflare DNS integration working"
+    - "All DoggPack machines accessible remotely"
+
+environment:
+  current_network:
+    network_name: "FZNet"
+    subnet: "192.168.68.0/24"
+    gateway: "192.168.68.1"
+    current_dns: "1.1.1.1"
+    isp: "Aussie Broadband"
+    public_ip: "144.6.156.14"
+  
+  target_machines:
+    - name: "Router/Gateway"
+      ip: "192.168.68.1"
+      role: "Network gateway and VPN endpoint"
+      services: ["NAT", "DHCP", "Firewall", "VPN Server"]
+    
+    - name: "NasDogg"
+      ip: "192.168.68.40"
+      role: "Local DNS server and network services"
+      services: ["DNS Server", "DHCP Helper", "Network Monitoring"]
+      
+    - name: "NucDogg"
+      ip: "192.168.68.50"
+      role: "Infrastructure coordination hub"
+      services: ["MCP Hub", "RDP", "SSH", "Docker Swarm Manager"]
+      
+    - name: "WorkDogg"
+      ip: "192.168.68.51"
+      role: "Development and processing workstation"
+      services: ["RDP", "SSH", "Docker Swarm Worker", "Development Tools"]
+      
+    - name: "ZenDogg"
+      ip: "192.168.68.52"
+      role: "Primary workstation and control interface"
+      services: ["RDP", "Windows Control App", "Desktop Access"]
+
+  network_segments:
+    - name: "Infrastructure"
+      vlan_id: 10
+      subnet: "192.168.10.0/24"
+      purpose: "DoggPack core infrastructure"
+      devices: ["NucDogg", "WorkDogg", "ZenDogg", "NasDogg"]
+      
+    - name: "SmartHome"
+      vlan_id: 20
+      subnet: "192.168.20.0/24"
+      purpose: "IoT and smart home devices"
+      devices: ["Tuya devices", "Nest Hub", "Smart switches"]
+      
+    - name: "Gaming"
+      vlan_id: 30
+      subnet: "192.168.30.0/24"
+      purpose: "Gaming consoles and entertainment"
+      devices: ["Xbox", "Gaming PCs", "Media devices"]
+      
+    - name: "Personal"
+      vlan_id: 40
+      subnet: "192.168.40.0/24"
+      purpose: "Personal devices and guests"
+      devices: ["Phones", "Tablets", "Laptops", "Guest devices"]
+
+prerequisites:
+  hardware_requirements:
+    - "VLAN-capable router or managed switch"
+    - "Router with VPN server capabilities"
+    - "Sufficient bandwidth for VPN traffic"
+    
+  software_requirements:
+    - "Synology DSM 7.x on NasDogg"
+    - "Docker capabilities on NucDogg and WorkDogg"
+    - "Windows Pro/Enterprise on ZenDogg and WorkDogg for RDP"
+    
+  external_dependencies:
+    - "Domain name registration (doggpack.net recommended)"
+    - "Cloudflare account with DNS management"
+    - "Dynamic DNS service or static IP"
+    
+  network_access:
+    - "Administrative access to router configuration"
+    - "Physical access to all DoggPack machines"
+    - "Backup connectivity method during configuration"
+
+coordination:
+  planning_instance: "CDTZ"
+  execution_instances:
+    - "Human Administrator"  # Network changes require human oversight
+    - "CCN"  # For server configuration
+    - "CCW"  # For testing and validation
+  
+  communication_method: "Manual coordination with GitHub issue tracking"
+  state_sharing: "Network configuration documentation"
+  checkpoint_intervals: "After each network segment configuration"
+  failure_escalation: "Immediate rollback to working configuration"
+
+deployment_steps:
+  - name: "prepare_network_documentation"
+    assigned_to: "Human Administrator"
+    description: "Document current network state and create backup of router configuration"
+    estimated_duration: "15 minutes"
+    dependencies: []
+    validation:
+      - "Current router configuration backed up"
+      - "Network diagram created"
+      - "Device inventory completed"
+    rollback_actions:
+      - "Restore from router backup"
+
+  - name: "configure_network_segmentation"
+    assigned_to: "Human Administrator"
+    description: "Create VLANs and network segments for security isolation"
+    estimated_duration: "30 minutes"
+    dependencies: ["prepare_network_documentation"]
+    validation:
+      - "VLANs created and operational"
+      - "Inter-VLAN routing configured"
+      - "Firewall rules implemented"
+    rollback_actions:
+      - "Disable VLANs"
+      - "Restore flat network configuration"
+
+  - name: "setup_dns_server"
+    assigned_to: "CCN"
+    description: "Configure local DNS server on NasDogg with custom domains"
+    estimated_duration: "20 minutes"
+    dependencies: ["configure_network_segmentation"]
+    validation:
+      - "DNS server responding to queries"
+      - "Custom domains resolving locally"
+      - "External DNS forwarding working"
+    rollback_actions:
+      - "Disable local DNS server"
+      - "Revert to router DNS"
+
+  - name: "configure_vpn_server"
+    assigned_to: "Human Administrator"
+    description: "Set up VPN server on router with certificate-based authentication"
+    estimated_duration: "25 minutes"
+    dependencies: ["setup_dns_server"]
+    validation:
+      - "VPN server operational"
+      - "Certificates generated and distributed"
+      - "Test connection from external network"
+    rollback_actions:
+      - "Disable VPN server"
+      - "Remove VPN configurations"
+
+  - name: "implement_dynamic_dns"
+    assigned_to: "CCN"
+    description: "Configure dynamic DNS for consistent external access"
+    estimated_duration: "15 minutes"
+    dependencies: ["configure_vpn_server"]
+    validation:
+      - "DDNS updating correctly"
+      - "External domain resolving to current IP"
+      - "DNS propagation verified"
+    rollback_actions:
+      - "Remove DDNS configuration"
+      - "Document static IP requirements"
+
+  - name: "setup_cloudflare_integration"
+    assigned_to: "CCN"
+    description: "Integrate with Cloudflare for DNS management and security"
+    estimated_duration: "20 minutes"
+    dependencies: ["implement_dynamic_dns"]
+    validation:
+      - "Cloudflare DNS records configured"
+      - "SSL certificates provisioned"
+      - "Security settings optimized"
+    rollback_actions:
+      - "Revert to direct DNS management"
+      - "Remove Cloudflare proxy settings"
+
+  - name: "configure_rdp_access"
+    assigned_to: "CCW"
+    description: "Set up secure RDP access for all Windows machines"
+    estimated_duration: "25 minutes"
+    dependencies: ["setup_cloudflare_integration"]
+    validation:
+      - "RDP enabled on all target machines"
+      - "Network-level authentication configured"
+      - "Custom RDP ports assigned"
+      - "Firewall rules created"
+    rollback_actions:
+      - "Disable RDP services"
+      - "Remove firewall exceptions"
+
+  - name: "deploy_network_monitoring"
+    assigned_to: "CCN"
+    description: "Set up network monitoring and alerting capabilities"
+    estimated_duration: "20 minutes"
+    dependencies: ["configure_rdp_access"]
+    validation:
+      - "Network monitoring operational"
+      - "Device discovery working"
+      - "Alert notifications configured"
+    rollback_actions:
+      - "Remove monitoring services"
+      - "Revert to basic network management"
+
+  - name: "validate_security_configuration"
+    assigned_to: "CCW"
+    description: "Comprehensive security testing and validation"
+    estimated_duration: "30 minutes"
+    dependencies: ["deploy_network_monitoring"]
+    validation:
+      - "Port scans show only intended open ports"
+      - "VPN connections secure and functional"
+      - "Network segmentation properly isolating traffic"
+      - "Remote access working from external networks"
+    rollback_actions:
+      - "Document security findings"
+      - "Implement additional hardening measures"
+
+network_configuration:
+  vlans:
+    infrastructure:
+      vlan_id: 10
+      subnet: "192.168.10.0/24"
+      gateway: "192.168.10.1"
+      dhcp_range: "192.168.10.100-192.168.10.199"
+      dns_servers: ["192.168.10.40", "1.1.1.1"]
+      
+    smarthome:
+      vlan_id: 20
+      subnet: "192.168.20.0/24"
+      gateway: "192.168.20.1"
+      dhcp_range: "192.168.20.100-192.168.20.199"
+      dns_servers: ["192.168.10.40", "1.1.1.1"]
+      internet_access: "restricted"
+      
+    gaming:
+      vlan_id: 30
+      subnet: "192.168.30.0/24"
+      gateway: "192.168.30.1"
+      dhcp_range: "192.168.30.100-192.168.30.199"
+      dns_servers: ["192.168.10.40", "1.1.1.1"]
+      qos_priority: "high"
+      
+    personal:
+      vlan_id: 40
+      subnet: "192.168.40.0/24"
+      gateway: "192.168.40.1"
+      dhcp_range: "192.168.40.100-192.168.40.199"
+      dns_servers: ["192.168.10.40", "1.1.1.1"]
+
+  static_ip_assignments:
+    "192.168.10.40": "NasDogg"       # DNS Server
+    "192.168.10.50": "NucDogg"       # Infrastructure Hub
+    "192.168.10.51": "WorkDogg"      # Development Machine
+    "192.168.10.52": "ZenDogg"       # Primary Workstation
+
+  firewall_rules:
+    inter_vlan:
+      - "Allow Infrastructure → All VLANs (management)"
+      - "Allow Personal → Infrastructure (limited services)"
+      - "Deny SmartHome → Infrastructure"
+      - "Deny Gaming → Infrastructure"
+      - "Deny SmartHome → Personal"
+      
+    external_access:
+      - "VPN: 1194/UDP"
+      - "RDP-NucDogg: 3390/TCP"
+      - "RDP-WorkDogg: 3391/TCP"
+      - "RDP-ZenDogg: 3392/TCP"
+      - "SSH-NucDogg: 2222/TCP"
+      - "SSH-WorkDogg: 2223/TCP"
+
+dns_configuration:
+  local_dns_server: "192.168.10.40"  # NasDogg
+  
+  local_domains:
+    - domain: "doggpack.local"
+      records:
+        - "nasdogg.doggpack.local → 192.168.10.40"
+        - "nucdogg.doggpack.local → 192.168.10.50"
+        - "workdogg.doggpack.local → 192.168.10.51"
+        - "zendogg.doggpack.local → 192.168.10.52"
+        - "mcp.doggpack.local → 192.168.10.50"
+        - "docker.doggpack.local → 192.168.10.50"
+        
+  external_domains:
+    primary_domain: "doggpack.net"
+    subdomains:
+      - "vpn.doggpack.net → Dynamic IP"
+      - "home.doggpack.net → Dynamic IP"
+      - "mcp.doggpack.net → Port forward to NucDogg"
+      - "remote.doggpack.net → VPN gateway"
+
+vpn_configuration:
+  vpn_type: "OpenVPN"
+  vpn_port: 1194
+  protocol: "UDP"
+  encryption: "AES-256"
+  authentication: "Certificate + Username/Password"
+  
+  client_profiles:
+    - name: "admin"
+      access: "full_network"
+      routes: ["192.168.10.0/24", "192.168.20.0/24", "192.168.30.0/24", "192.168.40.0/24"]
+      
+    - name: "user"
+      access: "infrastructure_only"
+      routes: ["192.168.10.0/24"]
+      
+    - name: "readonly"
+      access: "monitoring_only"
+      routes: ["192.168.10.40/32"]
+
+remote_access_configuration:
+  rdp_settings:
+    nucdogg:
+      internal_port: 3389
+      external_port: 3390
+      authentication: "Network Level Authentication"
+      encryption: "High"
+      
+    workdogg:
+      internal_port: 3389
+      external_port: 3391
+      authentication: "Network Level Authentication"
+      encryption: "High"
+      
+    zendogg:
+      internal_port: 3389
+      external_port: 3392
+      authentication: "Network Level Authentication"
+      encryption: "High"
+      
+  ssh_settings:
+    nucdogg:
+      port: 2222
+      key_auth_only: true
+      root_login: false
+      
+    workdogg:
+      port: 2223
+      key_auth_only: true
+      root_login: false
+
+cloudflare_configuration:
+  dns_records:
+    - type: "A"
+      name: "vpn"
+      content: "Dynamic IP"
+      ttl: 300
+      proxied: false
+      
+    - type: "A"
+      name: "home"
+      content: "Dynamic IP"
+      ttl: 300
+      proxied: true
+      
+    - type: "CNAME"
+      name: "mcp"
+      content: "home.doggpack.net"
+      proxied: true
+      
+  security_settings:
+    ssl_mode: "Full (strict)"
+    always_use_https: true
+    min_tls_version: "1.2"
+    security_level: "medium"
+    challenge_passage: "enabled"
+
+monitoring_and_alerting:
+  network_monitoring:
+    tool: "PRTG Network Monitor (on NasDogg)"
+    monitored_devices: "All infrastructure devices"
+    check_interval: "1 minute"
+    
+  security_monitoring:
+    failed_login_attempts: "Alert after 3 attempts"
+    unusual_traffic_patterns: "Alert on 50% deviation"
+    vpn_connection_alerts: "Log all connections"
+    
+  notification_methods:
+    - "Email alerts"
+    - "Slack integration (if available)"
+    - "SMS for critical alerts"
+
+testing_strategy:
+  internal_testing:
+    - "Ping tests between VLANs"
+    - "DNS resolution testing"
+    - "Service accessibility validation"
+    
+  external_testing:
+    - "VPN connection from mobile network"
+    - "RDP access through VPN"
+    - "Domain resolution from external networks"
+    - "Port scan validation"
+    
+  security_testing:
+    - "Firewall rule validation"
+    - "VPN certificate security"
+    - "RDP brute force protection"
+    - "Network segmentation verification"
+
+rollback_plan:
+  trigger_conditions:
+    - "Network connectivity lost"
+    - "VPN server not accessible"
+    - "DNS resolution failures"
+    - "Critical services unreachable"
+    
+  rollback_steps:
+    - name: "restore_router_config"
+      description: "Restore router to backed-up configuration"
+      estimated_duration: "5 minutes"
+      
+    - name: "disable_vlans"
+      description: "Remove VLAN configuration and return to flat network"
+      estimated_duration: "5 minutes"
+      
+    - name: "restore_dns_settings"
+      description: "Revert to original DNS configuration"
+      estimated_duration: "3 minutes"
+      
+    - name: "validate_basic_connectivity"
+      description: "Ensure all devices can access internet"
+      estimated_duration: "10 minutes"
+  
+  recovery_time_objective: "20 minutes"
+  data_loss_tolerance: "No data loss - configuration only"
+
+security_considerations:
+  immediate_security:
+    - "Change all default passwords"
+    - "Enable WPA3 encryption on wireless"
+    - "Disable WPS and unnecessary services"
+    - "Enable router firewall logging"
+    
+  ongoing_security:
+    - "Regular firmware updates"
+    - "VPN certificate renewal (annual)"
+    - "Access log monitoring"
+    - "Periodic security audits"
+    
+  incident_response:
+    - "Documented procedures for security breaches"
+    - "Emergency contact information"
+    - "Backup communication methods"
+    - "Forensic data collection procedures"
+
+documentation_updates:
+  - file: "network-topology-diagram.md"
+    changes: "Create comprehensive network diagram with VLANs"
+    
+  - file: "remote-access-guide.md"
+    changes: "Document VPN setup and RDP access procedures"
+    
+  - file: "dns-management-guide.md"
+    changes: "Document local DNS configuration and domain management"
+    
+  - file: "security-procedures.md"
+    changes: "Document security monitoring and incident response"
+
+integration_with_doggpack:
+  mcp_networking:
+    - "MCP servers accessible via local domains"
+    - "Secure inter-machine communication"
+    - "Load balancing for MCP endpoints"
+    
+  docker_networking:
+    - "Docker Swarm overlay networks"
+    - "Container DNS resolution"
+    - "Service discovery integration"
+    
+  remote_development:
+    - "VPN access to development environments"
+    - "Secure code repository access"
+    - "Remote debugging capabilities"
+
+success_metrics:
+  connectivity_metrics:
+    - "VPN connection success rate > 99%"
+    - "DNS resolution time < 50ms"
+    - "RDP connection establishment < 5 seconds"
+    
+  security_metrics:
+    - "Zero unauthorized access attempts successful"
+    - "All traffic properly segmented by VLAN"
+    - "External security scan results clean"
+    
+  performance_metrics:
+    - "Network latency < 10ms internal"
+    - "VPN throughput > 50Mbps"
+    - "DNS cache hit ratio > 95%"
+
+approval:
+  required_approvals:
+    - "Network disruption window approved"
+    - "Security configuration reviewed"
+    - "Backup procedures validated"
+    - "Emergency rollback plan tested"
+  
+  approved_by: ""
+  approved_date: ""
+  deployment_authorized: false
+
+execution_log:
+  start_time: ""
+  end_time: ""
+  actual_duration: ""
+  steps_completed: []
+  issues_encountered: []
+  final_status: ""
+
+next_phase_planning:
+  immediate_enhancements:
+    - "Network monitoring dashboard"
+    - "Automated backup procedures"
+    - "Advanced threat detection"
+    
+  future_considerations:
+    - "SD-WAN implementation"
+    - "Network automation with Ansible"
+    - "AI-based network optimization"
