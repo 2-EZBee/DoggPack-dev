@@ -1,1 +1,379 @@
-# Foundation Infrastructure Deployment Plan\n\nmetadata:\n  name: \"foundation-infrastructure\"\n  version: \"1.0.0\"\n  created_date: \"2025-08-02\"\n  created_by: \"CDTZ\"\n  status: \"active\"\n  risk_level: \"medium\"\n  estimated_duration: \"45 minutes\"\n\ndescription:\n  overview: \"Deploy the foundational GitHub-orchestrated, MCP-ready infrastructure that enables AI-coordinated deployments across the DoggPack ecosystem\"\n  scope: \"Docker Swarm, isolated development environments, GitHub coordination, and MCP preparation\"\n  business_value: \"Enables natural language infrastructure management and coordinated AI deployments through GitHub Actions bootstrap\"\n  success_criteria:\n    - \"CDTZ can orchestrate deployments through GitHub Actions\"\n    - \"CCN and CCW can execute tasks via GitHub coordination\"\n    - \"Isolated development environments are functional\"\n    - \"External API access works from containers\"\n    - \"Foundation ready for MCP server deployment\"\n\nenvironment:\n  target_machines:\n    - name: \"nucdogg\"\n      role: \"coordination hub and core services\"\n      resources_required:\n        cpu: \"4 cores\"\n        memory: \"8GB\"\n        disk: \"50GB\"\n    - name: \"workdogg\"\n      role: \"development workloads and processing\"\n      resources_required:\n        cpu: \"4 cores\"\n        memory: \"8GB\"\n        disk: \"50GB\"\n  \n  networks:\n    - name: \"dogpack_swarm_net\"\n      type: \"overlay\"\n      purpose: \"Docker Swarm communication\"\n    - name: \"isolated_dev_net\"\n      type: \"bridge\"\n      purpose: \"Development environment isolation\"\n    - name: \"coordination_net\"\n      type: \"bridge\"\n      purpose: \"GitHub task coordination\"\n\nprerequisites:\n  system_requirements:\n    - \"Fresh Ubuntu 22.04 LTS on both machines\"\n    - \"Docker installed and configured\"\n    - \"Claude Code installed on both machines\"\n    - \"GitHub repository access configured\"\n    - \"SSH connectivity between machines\"\n    - \"8GB+ available RAM on each machine\"\n    - \"50GB+ available disk space\"\n    - \"Internet connectivity for GitHub API access\"\n  \n  dependencies: []  # This is the foundational deployment\n  \n  timeshift_snapshots:\n    - machine: \"nucdogg\"\n      snapshot_name: \"pre-foundation-deployment-$(date +%Y%m%d-%H%M%S)\"\n    - machine: \"workdogg\"\n      snapshot_name: \"pre-foundation-deployment-$(date +%Y%m%d-%H%M%S)\"\n\ncoordination:\n  planning_instance: \"CDTZ\"\n  execution_instances:\n    - \"CCN\"\n    - \"CCW\"\n  \n  communication_method: \"github-actions-orchestration\"\n  state_sharing: \"github-issues-and-repository-dispatch\"\n  \n  checkpoint_intervals: \"after each service deployment\"\n  failure_escalation: \"halt deployment, update GitHub issue, preserve state for debugging\"\n\ndeployment_steps:\n  - name: \"trigger_github_deployment\"\n    assigned_to: \"CDTZ\"\n    description: \"Trigger foundation deployment through GitHub Actions workflow\"\n    estimated_duration: \"2 minutes\"\n    dependencies: []\n    github_coordination:\n      workflow: \"foundation-deployment.yml\"\n      trigger_method: \"workflow_dispatch\"\n    validation:\n      - \"GitHub Actions workflow started successfully\"\n      - \"Deployment issue created and tracked\"\n      - \"CCN and CCW notified via repository dispatch\"\n    rollback_actions:\n      - \"Cancel GitHub Actions workflow\"\n      - \"Close deployment tracking issue\"\n  \n  - name: \"create_timeshift_snapshots\"\n    assigned_to: \"CCN,CCW\"\n    description: \"Create system snapshots before deployment begins\"\n    estimated_duration: \"5 minutes\"\n    dependencies: [\"trigger_github_deployment\"]\n    github_coordination:\n      trigger_event: \"ccn-deployment-task,ccw-deployment-task\"\n      task_name: \"create_timeshift_snapshots\"\n    validation:\n      - \"Timeshift snapshot created on NucDogg\"\n      - \"Timeshift snapshot created on WorkDogg\"\n      - \"Snapshot IDs reported to GitHub issue\"\n    rollback_actions:\n      - \"Snapshots available for emergency rollback\"\n  \n  - name: \"initialize_docker_swarm\"\n    assigned_to: \"CCN\"\n    description: \"Initialize Docker Swarm with NucDogg as manager, WorkDogg as worker\"\n    estimated_duration: \"5 minutes\"\n    dependencies: [\"create_timeshift_snapshots\"]\n    github_coordination:\n      trigger_event: \"ccn-deployment-task\"\n      task_name: \"initialize_docker_swarm\"\n    validation:\n      - \"Docker Swarm initialized successfully on NucDogg\"\n      - \"Join token generated and shared via GitHub issue\"\n      - \"WorkDogg joined swarm as worker node\"\n      - \"Swarm status shows 2 nodes ready\"\n    rollback_actions:\n      - \"Leave swarm on WorkDogg\"\n      - \"Leave swarm on NucDogg\"\n  \n  - name: \"create_foundation_networks\"\n    assigned_to: \"CCN\"\n    description: \"Create Docker networks for service communication\"\n    estimated_duration: \"3 minutes\"\n    dependencies: [\"initialize_docker_swarm\"]\n    github_coordination:\n      trigger_event: \"ccn-deployment-task\"\n      task_name: \"create_foundation_networks\"\n    validation:\n      - \"dogpack_swarm_net overlay network created\"\n      - \"isolated_dev_net bridge network created\"\n      - \"coordination_net bridge network created\"\n      - \"Networks accessible from both nodes\"\n    rollback_actions:\n      - \"Remove created networks\"\n  \n  - name: \"setup_github_task_listeners\"\n    assigned_to: \"CCN,CCW\"\n    description: \"Deploy and start GitHub task listener services\"\n    estimated_duration: \"8 minutes\"\n    dependencies: [\"create_foundation_networks\"]\n    github_coordination:\n      trigger_event: \"ccn-deployment-task,ccw-deployment-task\"\n      task_name: \"setup_github_task_listeners\"\n    validation:\n      - \"CCN task listener service running\"\n      - \"CCW task listener service running\"\n      - \"Task listeners responding to test dispatch events\"\n      - \"GitHub API connectivity confirmed\"\n    rollback_actions:\n      - \"Stop and remove task listener services\"\n      - \"Clean up listener configurations\"\n  \n  - name: \"deploy_isolated_dev_environments\"\n    assigned_to: \"CCW\"\n    description: \"Deploy isolated development containers for both Claude instances\"\n    estimated_duration: \"12 minutes\"\n    dependencies: [\"setup_github_task_listeners\"]\n    github_coordination:\n      trigger_event: \"ccw-deployment-task\"\n      task_name: \"deploy_isolated_dev_environments\"\n    validation:\n      - \"CCN development container running on NucDogg\"\n      - \"CCW development container running on WorkDogg\"\n      - \"SSH access to both containers working\"\n      - \"Docker socket access from containers functional\"\n      - \"Claude Code installed in both containers\"\n    rollback_actions:\n      - \"Stop and remove development containers\"\n      - \"Remove development volumes\"\n  \n  - name: \"configure_external_api_access\"\n    assigned_to: \"CCN\"\n    description: \"Set up API gateway for external service access from containers\"\n    estimated_duration: \"10 minutes\"\n    dependencies: [\"deploy_isolated_dev_environments\"]\n    github_coordination:\n      trigger_event: \"ccn-deployment-task\"\n      task_name: \"configure_external_api_access\"\n    validation:\n      - \"API gateway container deployed\"\n      - \"Asana API proxy functional\"\n      - \"GitHub API proxy functional\"\n      - \"External API access from dev containers working\"\n    rollback_actions:\n      - \"Stop and remove API gateway\"\n      - \"Revert external access configurations\"\n  \n  - name: \"validate_github_coordination\"\n    assigned_to: \"CDTZ\"\n    description: \"Validate end-to-end GitHub-orchestrated coordination\"\n    estimated_duration: \"8 minutes\"\n    dependencies: [\"configure_external_api_access\"]\n    github_coordination:\n      trigger_method: \"github-actions-monitoring\"\n      validation_workflow: \"test-coordination\"\n    validation:\n      - \"CDTZ can trigger tasks via GitHub Actions\"\n      - \"CCN and CCW receive and execute tasks\"\n      - \"Progress tracking through GitHub issues works\"\n      - \"External API calls successful from isolated environments\"\n      - \"All coordination mechanisms functional\"\n    rollback_actions:\n      - \"Document coordination failures for debugging\"\n      - \"Preserve environment for troubleshooting\"\n\nexternal_integrations:\n  github:\n    required: true\n    access_method: \"github-actions-native\"\n    validation:\n      - \"Can trigger workflows from CDTZ\"\n      - \"Repository dispatch events work\"\n      - \"Issue creation and commenting functional\"\n  \n  asana:\n    required: true\n    access_method: \"api-gateway-proxy\"\n    validation:\n      - \"Can list projects through proxy\"\n      - \"Can create test tasks\"\n  \n  anthropic:\n    required: false\n    access_method: \"existing-claude-subscriptions\"\n    validation:\n      - \"Claude Code instances have API access\"\n      - \"No additional API costs incurred\"\n\nmonitoring:\n  health_checks:\n    - endpoint: \"http://nucdogg:8200/health\"\n      service: \"api-gateway\"\n      expected_status: 200\n      check_interval: \"30 seconds\"\n    - command: \"docker node ls\"\n      service: \"docker-swarm\"\n      expected_output: \"2 nodes Ready\"\n      check_interval: \"60 seconds\"\n  \n  metrics_collection:\n    - system_cpu_usage\n    - system_memory_usage\n    - container_count_and_status\n    - github_api_rate_limits\n    - external_api_response_times\n  \n  alerting:\n    failure_threshold: \"2 consecutive health check failures\"\n    notification_method: \"github-issue-comments\"\n\nrollback_plan:\n  trigger_conditions:\n    - \"Any development environment fails to deploy\"\n    - \"GitHub coordination mechanisms fail\"\n    - \"External API access fails validation\"\n    - \"Docker Swarm becomes unstable\"\n    - \"Manual rollback requested via GitHub comment: '/rollback'\"\n  \n  rollback_steps:\n    - name: \"stop_all_services\"\n      description: \"Stop all deployed services and containers\"\n      estimated_duration: \"5 minutes\"\n      assigned_to: \"CCN,CCW\"\n    \n    - name: \"clean_docker_resources\"\n      description: \"Remove services, networks, volumes\"\n      estimated_duration: \"5 minutes\"\n      assigned_to: \"CCN\"\n    \n    - name: \"restore_timeshift_snapshots\"\n      description: \"Restore both machines from pre-deployment snapshots\"\n      estimated_duration: \"20 minutes\"\n      assigned_to: \"Manual intervention required\"\n    \n    - name: \"validate_clean_state\"\n      description: \"Ensure both machines are back to pre-deployment state\"\n      estimated_duration: \"5 minutes\"\n      assigned_to: \"CCN,CCW\"\n  \n  recovery_time_objective: \"35 minutes\"\n  data_loss_tolerance: \"none - snapshots preserve all previous state\"\n\ntesting_strategy:\n  pre_deployment:\n    - \"Validate GitHub Actions workflow syntax\"\n    - \"Check network connectivity between machines\"\n    - \"Verify Claude Code instances have GitHub access\"\n    - \"Confirm adequate resources on both machines\"\n    - \"Test Timeshift snapshot creation\"\n  \n  during_deployment:\n    - \"GitHub issue tracking for each step\"\n    - \"Task listener health monitoring\"\n    - \"Container deployment validation\"\n    - \"External API connectivity testing\"\n    - \"Resource usage monitoring\"\n  \n  post_deployment:\n    - \"Complete GitHub coordination workflow test\"\n    - \"External API integration testing\"\n    - \"Security verification (container isolation)\"\n    - \"Performance baseline measurement\"\n    - \"Documentation accuracy verification\"\n\ndocumentation_updates:\n  - file: \"README.md\"\n    changes: \"Update with foundation infrastructure access information and coordination patterns\"\n  - file: \"documentation/operations/github-coordination.md\"\n    changes: \"Document GitHub Actions coordination workflows and troubleshooting\"\n  - file: \"documentation/user-guides/development-environments.md\"\n    changes: \"Document isolated development environment access and usage\"\n  - file: \"planning/deployment-plans/completed/\"\n    changes: \"Move this plan to completed with execution results and lessons learned\"\n\nlessons_learned:\n  # To be filled in after deployment\n  what_worked_well: []\n  what_could_be_improved: []\n  unexpected_challenges: []\n  recommendations_for_future: []\n\napproval:\n  required_approvals:\n    - \"CDTZ architecture review completed\"\n    - \"Resource allocation confirmed on both machines\"\n    - \"Timeshift backup strategy verified\"\n    - \"GitHub repository and Actions configured\"\n    - \"External API credentials secured\"\n  \n  approved_by: \"\"\n  approved_date: \"\"\n  deployment_authorized: false\n\nexecution_log:\n  # To be filled in during deployment\n  github_workflow_run: \"\"\n  deployment_issue: \"\"\n  start_time: \"\"\n  end_time: \"\"\n  actual_duration: \"\"\n  steps_completed: []\n  issues_encountered: []\n  final_status: \"\"\n\nnext_planned_deployments:\n  - \"mcp-coordination-layer\"\n  - \"n8n-automation-stack\"\n  - \"enhanced-monitoring-observability\"\n  - \"knowledge-management-integration\"\n\n## Post-Deployment Access Information\n\nOnce this foundation is deployed, you'll have:\n\n### **GitHub Coordination**\n- **Workflow Triggers**: Available in Actions tab of repository\n- **Deployment Tracking**: Via GitHub issues with 'deployment' label\n- **Task Coordination**: Repository dispatch events to CCN/CCW\n- **Progress Monitoring**: Real-time updates through issue comments\n\n### **Development Environment Access**\n- **CCN Dev Container**: `ssh claude@nucdogg -p 2200`\n- **CCW Dev Container**: `ssh claude@workdogg -p 2201`\n- **Docker Access**: Full Docker capabilities within containers\n- **Claude Code**: Installed and configured in both containers\n\n### **External API Access** (from containers)\n- **Asana**: `http://api-gateway:8200/api/asana/`\n- **GitHub**: Native access through GitHub MCP\n- **Google Services**: Via future MCP server deployment\n\n### **Management Interfaces**\n- **Docker Swarm**: `docker node ls` (from NucDogg)\n- **Service Status**: `docker service ls` (from NucDogg)\n- **Container Access**: `docker exec -it <container> bash`\n\nThis foundation enables all future AI-coordinated deployments through the GitHub Actions coordination layer!"
+# Foundation Infrastructure Deployment Plan
+
+metadata:
+  name: "foundation-infrastructure"
+  version: "1.1.0"
+  created_date: "2025-08-02"
+  updated_date: "2025-08-05"
+  created_by: "CDTZ"
+  status: "active"
+  risk_level: "medium"
+  estimated_duration: "45 minutes"
+
+description:
+  overview: "Deploy the foundational GitHub-orchestrated, MCP-ready infrastructure that enables AI-coordinated deployments across the DoggPack ecosystem"
+  scope: "Docker Swarm, isolated development environments, GitHub coordination, and MCP preparation"
+  business_value: "Enables natural language infrastructure management and coordinated AI deployments through GitHub Actions bootstrap"
+  success_criteria:
+    - "CDTZ can orchestrate deployments through GitHub Actions"
+    - "CCN and CCW can execute tasks via GitHub coordination"
+    - "Isolated development environments are functional"
+    - "External API access works from containers"
+    - "Foundation ready for MCP server deployment"
+
+environment:
+  target_machines:
+    - name: "nucdogg"
+      role: "coordination hub and core services"
+      resources_required:
+        cpu: "4 cores"
+        memory: "8GB"
+        disk: "50GB"
+    - name: "workdogg"
+      role: "development workloads and processing"
+      resources_required:
+        cpu: "4 cores"
+        memory: "8GB"
+        disk: "50GB"
+  
+  networks:
+    - name: "dogpack_swarm_net"
+      type: "overlay"
+      purpose: "Docker Swarm communication"
+    - name: "isolated_dev_net"
+      type: "bridge"
+      purpose: "Development environment isolation"
+    - name: "coordination_net"
+      type: "bridge"
+      purpose: "GitHub task coordination"
+
+prerequisites:
+  system_requirements:
+    - "Fresh Ubuntu 22.04 LTS on both machines"
+    - "Docker installed and configured"
+    - "Claude Code installed on both machines"
+    - "GitHub repository access configured"
+    - "SSH connectivity between machines"
+    - "8GB+ available RAM on each machine"
+    - "50GB+ available disk space"
+    - "Internet connectivity for GitHub API access"
+  
+  dependencies: []  # This is the foundational deployment
+  
+  timeshift_snapshots:
+    - machine: "nucdogg"
+      snapshot_name: "pre-foundation-deployment-$(date +%Y%m%d-%H%M%S)"
+    - machine: "workdogg"
+      snapshot_name: "pre-foundation-deployment-$(date +%Y%m%d-%H%M%S)"
+
+coordination:
+  planning_instance: "CDTZ"
+  execution_instances:
+    - "CCN"
+    - "CCW"
+  
+  communication_method: "github-actions-orchestration"
+  state_sharing: "github-issues-and-repository-dispatch"
+  
+  checkpoint_intervals: "after each service deployment"
+  failure_escalation: "halt deployment, update GitHub issue, preserve state for debugging"
+
+deployment_steps:
+  - name: "trigger_github_deployment"
+    assigned_to: "CDTZ"
+    description: "Trigger foundation deployment through GitHub Actions workflow"
+    estimated_duration: "2 minutes"
+    dependencies: []
+    github_coordination:
+      workflow: "foundation-deployment.yml"
+      trigger_method: "workflow_dispatch"
+    validation:
+      - "GitHub Actions workflow started successfully"
+      - "Deployment issue created and tracked"
+      - "CCN and CCW notified via repository dispatch"
+    rollback_actions:
+      - "Cancel GitHub Actions workflow"
+      - "Close deployment tracking issue"
+  
+  - name: "create_timeshift_snapshots"
+    assigned_to: "CCN,CCW"
+    description: "Create system snapshots before deployment begins"
+    estimated_duration: "5 minutes"
+    dependencies: ["trigger_github_deployment"]
+    github_coordination:
+      trigger_event: "ccn-deployment-task,ccw-deployment-task"
+      task_name: "create_timeshift_snapshots"
+    validation:
+      - "Timeshift snapshot created on NucDogg"
+      - "Timeshift snapshot created on WorkDogg"
+      - "Snapshot IDs reported to GitHub issue"
+    rollback_actions:
+      - "Snapshots available for emergency rollback"
+  
+  - name: "initialize_docker_swarm"
+    assigned_to: "CCN"
+    description: "Initialize Docker Swarm with NucDogg as manager, WorkDogg as worker"
+    estimated_duration: "5 minutes"
+    dependencies: ["create_timeshift_snapshots"]
+    github_coordination:
+      trigger_event: "ccn-deployment-task"
+      task_name: "initialize_docker_swarm"
+    validation:
+      - "Docker Swarm initialized successfully on NucDogg"
+      - "Join token generated and shared via GitHub issue"
+      - "WorkDogg joined swarm as worker node"
+      - "Swarm status shows 2 nodes ready"
+    rollback_actions:
+      - "Leave swarm on WorkDogg"
+      - "Leave swarm on NucDogg"
+  
+  - name: "create_foundation_networks"
+    assigned_to: "CCN"
+    description: "Create Docker networks for service communication"
+    estimated_duration: "3 minutes"
+    dependencies: ["initialize_docker_swarm"]
+    github_coordination:
+      trigger_event: "ccn-deployment-task"
+      task_name: "create_foundation_networks"
+    validation:
+      - "dogpack_swarm_net overlay network created"
+      - "isolated_dev_net bridge network created"
+      - "coordination_net bridge network created"
+      - "Networks accessible from both nodes"
+    rollback_actions:
+      - "Remove created networks"
+  
+  - name: "setup_github_task_listeners"
+    assigned_to: "CCN,CCW"
+    description: "Deploy and start GitHub task listener services"
+    estimated_duration: "8 minutes"
+    dependencies: ["create_foundation_networks"]
+    github_coordination:
+      trigger_event: "ccn-deployment-task,ccw-deployment-task"
+      task_name: "setup_github_task_listeners"
+    validation:
+      - "CCN task listener service running"
+      - "CCW task listener service running"
+      - "Task listeners responding to test dispatch events"
+      - "GitHub API connectivity confirmed"
+    rollback_actions:
+      - "Stop and remove task listener services"
+      - "Clean up listener configurations"
+  
+  - name: "deploy_isolated_dev_environments"
+    assigned_to: "CCW"
+    description: "Deploy isolated development containers for both Claude instances"
+    estimated_duration: "12 minutes"
+    dependencies: ["setup_github_task_listeners"]
+    github_coordination:
+      trigger_event: "ccw-deployment-task"
+      task_name: "deploy_isolated_dev_environments"
+    validation:
+      - "CCN development container running on NucDogg"
+      - "CCW development container running on WorkDogg"
+      - "SSH access to both containers working"
+      - "Docker socket access from containers functional"
+      - "Claude Code installed in both containers"
+    rollback_actions:
+      - "Stop and remove development containers"
+      - "Remove development volumes"
+  
+  - name: "configure_external_api_access"
+    assigned_to: "CCN"
+    description: "Set up API gateway for external service access from containers"
+    estimated_duration: "8 minutes"
+    dependencies: ["deploy_isolated_dev_environments"]
+    github_coordination:
+      trigger_event: "ccn-deployment-task"
+      task_name: "configure_external_api_access"
+    validation:
+      - "API gateway container deployed"
+      - "GitHub API proxy functional"
+      - "External API access from dev containers working"
+    rollback_actions:
+      - "Stop and remove API gateway"
+      - "Revert external access configurations"
+  
+  - name: "validate_github_coordination"
+    assigned_to: "CDTZ"
+    description: "Validate end-to-end GitHub-orchestrated coordination"
+    estimated_duration: "8 minutes"
+    dependencies: ["configure_external_api_access"]
+    github_coordination:
+      trigger_method: "github-actions-monitoring"
+      validation_workflow: "test-coordination"
+    validation:
+      - "CDTZ can trigger tasks via GitHub Actions"
+      - "CCN and CCW receive and execute tasks"
+      - "Progress tracking through GitHub issues works"
+      - "External API calls successful from isolated environments"
+      - "All coordination mechanisms functional"
+    rollback_actions:
+      - "Document coordination failures for debugging"
+      - "Preserve environment for troubleshooting"
+
+external_integrations:
+  github:
+    required: true
+    access_method: "github-actions-native"
+    validation:
+      - "Can trigger workflows from CDTZ"
+      - "Repository dispatch events work"
+      - "Issue creation and commenting functional"
+  
+  anthropic:
+    required: false
+    access_method: "existing-claude-subscriptions"
+    validation:
+      - "Claude Code instances have API access"
+      - "No additional API costs incurred"
+
+monitoring:
+  health_checks:
+    - endpoint: "http://nucdogg:8200/health"
+      service: "api-gateway"
+      expected_status: 200
+      check_interval: "30 seconds"
+    - command: "docker node ls"
+      service: "docker-swarm"
+      expected_output: "2 nodes Ready"
+      check_interval: "60 seconds"
+  
+  metrics_collection:
+    - system_cpu_usage
+    - system_memory_usage
+    - container_count_and_status
+    - github_api_rate_limits
+    - external_api_response_times
+  
+  alerting:
+    failure_threshold: "2 consecutive health check failures"
+    notification_method: "github-issue-comments"
+
+rollback_plan:
+  trigger_conditions:
+    - "Any development environment fails to deploy"
+    - "GitHub coordination mechanisms fail"
+    - "External API access fails validation"
+    - "Docker Swarm becomes unstable"
+    - "Manual rollback requested via GitHub comment: '/rollback'"
+  
+  rollback_steps:
+    - name: "stop_all_services"
+      description: "Stop all deployed services and containers"
+      estimated_duration: "5 minutes"
+      assigned_to: "CCN,CCW"
+    
+    - name: "clean_docker_resources"
+      description: "Remove services, networks, volumes"
+      estimated_duration: "5 minutes"
+      assigned_to: "CCN"
+    
+    - name: "restore_timeshift_snapshots"
+      description: "Restore both machines from pre-deployment snapshots"
+      estimated_duration: "20 minutes"
+      assigned_to: "Manual intervention required"
+    
+    - name: "validate_clean_state"
+      description: "Ensure both machines are back to pre-deployment state"
+      estimated_duration: "5 minutes"
+      assigned_to: "CCN,CCW"
+  
+  recovery_time_objective: "35 minutes"
+  data_loss_tolerance: "none - snapshots preserve all previous state"
+
+testing_strategy:
+  pre_deployment:
+    - "Validate GitHub Actions workflow syntax"
+    - "Check network connectivity between machines"
+    - "Verify Claude Code instances have GitHub access"
+    - "Confirm adequate resources on both machines"
+    - "Test Timeshift snapshot creation"
+  
+  during_deployment:
+    - "GitHub issue tracking for each step"
+    - "Task listener health monitoring"
+    - "Container deployment validation"
+    - "External API connectivity testing"
+    - "Resource usage monitoring"
+  
+  post_deployment:
+    - "Complete GitHub coordination workflow test"
+    - "External API integration testing"
+    - "Security verification (container isolation)"
+    - "Performance baseline measurement"
+    - "Documentation accuracy verification"
+
+documentation_updates:
+  - file: "README.md"
+    changes: "Update with foundation infrastructure access information and coordination patterns"
+  - file: "documentation/operations/github-coordination.md"
+    changes: "Document GitHub Actions coordination workflows and troubleshooting"
+  - file: "documentation/user-guides/development-environments.md"
+    changes: "Document isolated development environment access and usage"
+  - file: "planning/deployment-plans/completed/"
+    changes: "Move this plan to completed with execution results and lessons learned"
+
+lessons_learned:
+  # To be filled in after deployment
+  what_worked_well: []
+  what_could_be_improved: []
+  unexpected_challenges: []
+  recommendations_for_future: []
+
+approval:
+  required_approvals:
+    - "CDTZ architecture review completed"
+    - "Resource allocation confirmed on both machines"
+    - "Timeshift backup strategy verified"
+    - "GitHub repository and Actions configured"
+    - "External API credentials secured"
+    - "ADR-006 architectural changes implemented"
+  
+  approved_by: ""
+  approved_date: ""
+  deployment_authorized: false
+
+execution_log:
+  # To be filled in during deployment
+  github_workflow_run: ""
+  deployment_issue: ""
+  start_time: ""
+  end_time: ""
+  actual_duration: ""
+  steps_completed: []
+  issues_encountered: []
+  final_status: ""
+
+next_planned_deployments:
+  - "mcp-coordination-layer"
+  - "n8n-automation-stack"
+  - "enhanced-monitoring-observability"
+  - "knowledge-management-integration"
+
+## Post-Deployment Access Information
+
+Once this foundation is deployed, you'll have:
+
+### **GitHub Coordination**
+- **Workflow Triggers**: Available in Actions tab of repository
+- **Deployment Tracking**: Via GitHub issues with 'deployment' label
+- **Task Coordination**: Repository dispatch events to CCN/CCW
+- **Progress Monitoring**: Real-time updates through issue comments
+
+### **Development Environment Access**  
+- **CCN Dev Container**: `ssh claude@nucdogg -p 2200`
+- **CCW Dev Container**: `ssh claude@workdogg -p 2201`
+- **Docker Access**: Full Docker capabilities within containers
+- **Claude Code**: Installed and configured in both containers
+
+### **External API Access** (from containers)
+- **GitHub**: Native access through GitHub MCP
+- **Google Services**: Via future MCP server deployment
+
+### **Management Interfaces**
+- **Docker Swarm**: `docker node ls` (from NucDogg)
+- **Service Status**: `docker service ls` (from NucDogg)
+- **Container Access**: `docker exec -it <container> bash`
+
+This foundation enables all future AI-coordinated deployments through the GitHub Actions coordination layer!
