@@ -7,7 +7,7 @@ AI-centric infrastructure for the DoggPack ecosystem, enabling **natural languag
 Transform infrastructure management from manual configuration to **conversational orchestration**:
 
 ```
-"Deploy N8N automation with Asana integration" → AI coordinates deployment across machines
+"Deploy N8N automation with GitHub integration" → AI coordinates deployment across machines
 ```
 
 ## 🏗️ **Architecture Overview**
@@ -168,6 +168,7 @@ python tools/planning-validators/validate-deployment-plan.py \
 - [ADR-001: MCP-Centric Approach](./planning/decisions/001-mcp-centric-approach.md)
 - [ADR-002: GitHub Orchestration Bootstrap](./planning/decisions/002-github-orchestration-bootstrap.md)
 - [ADR-003: Isolated Development Environments](./planning/decisions/003-isolated-development-environments.md)
+- [ADR-006: Remove Portainer and Asana](./planning/decisions/006-remove-portainer-asana.md)
 
 ## 🤝 **Contributing**
 
