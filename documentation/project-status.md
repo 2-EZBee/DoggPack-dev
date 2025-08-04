@@ -1,6 +1,6 @@
 # DoggPack Development Project Status
 
-**Last Updated**: August 3, 2025  
+**Last Updated**: August 5, 2025  
 **Current Phase**: Pre-Deployment Planning Complete  
 **Next Milestone**: Network Infrastructure Security → Foundation Infrastructure Deployment  
 
@@ -56,6 +56,12 @@ DoggPack is an AI-centric infrastructure ecosystem where Claude instances coordi
 - [x] Port conflict prevention and validation
 - [x] Connectivity validation tools
 
+#### **Architecture Decision Updates (100%)**
+- [x] ADR-006: Remove Portainer and Asana from architecture
+- [x] Simplified service stack for AI-first approach
+- [x] GitHub-native task management strategy
+- [x] Direct Docker management through MCP servers
+
 ### 🟡 **In Progress**
 
 #### **Foundation Infrastructure (0% - Ready to Start)**
@@ -108,7 +114,7 @@ DoggPack is an AI-centric infrastructure ecosystem where Claude instances coordi
    - Docker Swarm setup
    - MCP coordination layer
    - Isolated development environments
-   - External API gateway
+   - External API gateway (GitHub-focused)
 
 ### **Planned**
 3. **n8n-automation-stack** - Workflow automation
@@ -160,7 +166,7 @@ DoggPack is an AI-centric infrastructure ecosystem where Claude instances coordi
 - [ ] All MCP servers deployed and responding
 - [ ] Claude instances can coordinate through MCP protocol
 - [ ] Isolated development environments functional
-- [ ] External API access working (Asana, GitHub)
+- [ ] External API access working (GitHub-focused)
 
 ## 🏗️ Architecture Status
 
@@ -168,8 +174,9 @@ DoggPack is an AI-centric infrastructure ecosystem where Claude instances coordi
 - ✅ **ADR-001**: MCP-Centric Approach (Accepted)
 - ✅ **ADR-002**: GitHub Orchestration Bootstrap (Accepted)  
 - ✅ **ADR-003**: Isolated Development Environments (Accepted)
-- 🟡 **ADR-004**: Network Segmentation Strategy (Accepted - Implementation Ready)
-- 🟡 **ADR-005**: Port Allocation and Conflict Prevention (Accepted)
+- ✅ **ADR-004**: Network Segmentation Strategy (Accepted - Implementation Ready)
+- ✅ **ADR-005**: Port Allocation and Conflict Prevention (Accepted)
+- ✅ **ADR-006**: Remove Portainer and Asana (Accepted)
 
 ### **Key Architectural Patterns Established**
 - Model Context Protocol (MCP) as communication backbone
@@ -179,13 +186,14 @@ DoggPack is an AI-centric infrastructure ecosystem where Claude instances coordi
 - Isolated development environments for Claude instances
 - Port allocation strategy preventing conflicts
 - Dual DNS (local + Cloudflare) for internal/external access
+- GitHub-native task and project management
 
 ## 🔧 Development Environment Status
 
 ### **CDTZ (ZenDogg) - Planning Instance**
 - **Status**: Ready for network configuration and coordination
 - **Role**: Create and monitor deployment plans, network administration
-- **Tools**: GitHub MCP, Asana MCP, planning validators, connectivity validators
+- **Tools**: GitHub MCP, planning validators, connectivity validators
 - **Next**: Execute network security implementation
 
 ### **CCN (NucDogg) - Infrastructure Instance**  
@@ -205,7 +213,7 @@ DoggPack is an AI-centric infrastructure ecosystem where Claude instances coordi
 ### **Current Metrics**
 - **Planning Velocity**: 5 comprehensive deployment plans completed
 - **Documentation Coverage**: 98% of core concepts documented
-- **Architecture Decisions**: 5 major decisions documented and approved
+- **Architecture Decisions**: 6 major decisions documented and approved
 - **Repository Structure**: 100% complete
 - **Connectivity Planning**: 100% complete with conflict prevention
 - **Network Security Design**: 100% complete and validated
@@ -234,7 +242,7 @@ DoggPack is an AI-centric infrastructure ecosystem where Claude instances coordi
 1. **Execute Foundation Deployment** - Docker Swarm and MCP servers
 2. **Validate AI Coordination** - Test Claude instance communication
 3. **Deploy Monitoring Stack** - Prometheus, Grafana, logging
-4. **External Service Integration** - Asana, GitHub, Google APIs
+4. **External Service Integration** - GitHub APIs and coordination
 
 ### **Following Weeks**
 1. **Deploy Application Services** - N8N, Obsidian, productivity tools
@@ -264,6 +272,7 @@ DoggPack is an AI-centric infrastructure ecosystem where Claude instances coordi
 - **AI-First Infrastructure**: Revolutionary approach to infrastructure management
 - **GitHub Orchestration**: Novel use of GitHub for deployment coordination
 - **Conflict Prevention**: Automated validation tools prevent configuration errors
+- **Simplified Architecture**: Removed unnecessary complexity (Portainer, Asana)
 
 ### **Documentation and Validation**
 - **Complete Connectivity Mapping**: Every port, IP, and domain mapped and validated
@@ -295,6 +304,6 @@ python tools/planning-validators/validate-connectivity.py --summary-only
 
 ---
 
-**The DoggPack project has completed all pre-deployment planning phases**. The network security and foundation infrastructure plans are ready for execution with comprehensive validation tools and zero-conflict port allocations. We now have enterprise-grade planning documentation that ensures successful deployment of the AI-centric infrastructure.
+**The DoggPack project has completed all pre-deployment planning phases with simplified, AI-first architecture**. The network security and foundation infrastructure plans are ready for execution with comprehensive validation tools and zero-conflict port allocations. We now have enterprise-grade planning documentation that ensures successful deployment of the AI-centric infrastructure.
 
 **Ready to implement secure, AI-coordinated infrastructure management!** 🛡️🚀🤖
