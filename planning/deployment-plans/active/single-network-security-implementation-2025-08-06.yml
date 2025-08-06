@@ -1,0 +1,580 @@
+metadata:
+  name: "single-network-security-implementation"
+  version: "1.0.0"
+  created_date: "2025-08-06"
+  created_by: "CDTZ"
+  status: "ready"
+  risk_level: "low-medium"
+  estimated_duration: "1.5-2 hours"
+  replaces: "network-infrastructure-security-2025-08-03.yml (deprecated)"
+
+description:
+  overview: "Implement multi-layered security within single flat network using TP-Link Deco X20 DSL consumer features"
+  scope: "WiFi-based segmentation, Access Control rules, VPN server, DNS security, emergency access, QoS configuration"
+  business_value: "Enterprise-grade security within consumer hardware constraints, secure remote access, IoT device isolation"
+  success_criteria:
+    - "IoT devices isolated from DoggPack infrastructure"
+    - "VPN server operational with external access"
+    - "Emergency RDP/SSH ports configured and tested"
+    - "Access Control rules blocking unauthorized access"
+    - "DNS server integration maintained (Phase 1 complete)"
+    - "Multi-layered security providing enterprise-level protection"
+
+environment:
+  current_network:
+    network_name: "DoggPackNet (existing)"
+    subnet: "192.168.68.0/24"
+    gateway: "192.168.68.1"
+    router: "TP-Link Deco X20 DSL"
+    dns_server: "192.168.68.40 (NasDogg - operational)"
+    dhcp_range: "192.168.68.100-250"
+    internet: "144.6.156.14/22, VDSL2 (82.9/22.6 Mbps)"
+    active_devices: 35
+  
+  hardware_capabilities:
+    available_features:
+      - "Guest Network isolation"
+      - "Access Control device blocking"
+      - "Basic firewall with port forwarding"
+      - "OpenVPN server capability"
+      - "QoS traffic prioritization"
+      - "Parental Controls (repurposed for security)"
+      - "Intrusion detection and blocking"
+    
+    limitations:
+      - "No VLAN support for internal LAN segmentation"
+      - "No enterprise firewall with advanced rules"
+      - "No port-based network segmentation"
+      - "Consumer-grade security features only"
+  
+  doggpack_infrastructure:
+    - name: "NasDogg"
+      ip: "192.168.68.40"
+      role: "DNS server, Storage (Phase 1 complete)"
+      services: ["DNS Server", "Local Domain Resolution", "External Forwarding"]
+      status: "operational"
+      
+    - name: "NucDogg"
+      ip: "192.168.68.50" 
+      role: "Infrastructure hub, Docker manager"
+      services: ["MCP Hub", "RDP", "SSH", "Docker Swarm Manager"]
+      status: "pending_assignment"
+      
+    - name: "WorkDogg"
+      ip: "192.168.68.51"
+      role: "Development machine, Docker worker"
+      services: ["RDP", "SSH", "Docker Swarm Worker", "Development"]
+      status: "pending_assignment"
+      
+    - name: "ZenDogg"
+      ip: "192.168.68.52"
+      role: "Primary workstation, Control interface"
+      services: ["RDP", "Windows Control App", "Desktop Access"]
+      status: "pending_assignment"
+
+  security_zones:
+    main_network:
+      name: "DoggPackNet"
+      purpose: "Infrastructure and trusted devices"
+      subnet: "192.168.68.0/24"
+      devices: ["DoggPack infrastructure", "Gaming consoles", "Personal devices"]
+      access_level: "full_network"
+      
+    guest_network:
+      name: "DoggPackIoT"
+      purpose: "IoT and smart home device isolation"
+      isolation: "isolated_from_main_network"
+      internet_access: "allowed"
+      devices: ["Tuya devices", "Nest Hub", "Smart switches", "Untrusted IoT"]
+      access_level: "internet_only"
+
+prerequisites:
+  phase_1_completion:
+    - "DNS server operational on NasDogg (192.168.68.40)"
+    - "Local domain resolution working (.doggpack.local)"
+    - "External DNS forwarding via Cloudflare (1.1.1.1)"
+    - "Network baseline documented and validated"
+    
+  hardware_requirements:
+    - "TP-Link Deco X20 DSL with latest firmware"
+    - "Administrative access to Deco app/web interface"
+    - "Sufficient bandwidth for VPN overhead (10-15%)"
+    - "Mobile device for external VPN testing"
+    
+  software_requirements:
+    - "Deco app installed and configured"
+    - "OpenVPN client software for testing"
+    - "RDP client for remote access testing"
+    - "SSH client for emergency access testing"
+    
+  external_dependencies:
+    - "External network for VPN testing (mobile hotspot)"
+    - "Domain registration for external access (optional)"
+    - "Dynamic DNS service (built-in Deco DDNS)"
+    
+  backup_requirements:
+    - "Router configuration backup completed"
+    - "Alternative internet connection available"
+    - "Physical access to router for reset if needed"
+
+coordination:
+  planning_instance: "CDTZ"
+  execution_instances:
+    - "Human Administrator"  # Primary implementer
+    - "CCN"  # For DNS integration and validation
+    - "CCW"  # For testing and security validation
+  
+  communication_method: "Real-time coordination with documentation"
+  state_sharing: "Live network configuration status"
+  checkpoint_intervals: "After each security layer implementation"
+  failure_escalation: "Immediate rollback to known working state"
+
+deployment_steps:
+  - name: "backup_current_configuration"
+    assigned_to: "Human Administrator"
+    description: "Create complete backup of current router configuration"
+    estimated_duration: "10 minutes"
+    dependencies: []
+    validation:
+      - "Router configuration backed up successfully"
+      - "Current device list documented"
+      - "Network performance baseline recorded"
+    rollback_actions:
+      - "Restore from backup if needed"
+
+  - name: "enable_guest_network_isolation"
+    assigned_to: "Human Administrator"
+    description: "Configure Guest Network for IoT device isolation"
+    estimated_duration: "15 minutes"
+    dependencies: ["backup_current_configuration"]
+    validation:
+      - "Guest Network 'DoggPackIoT' created and operational"
+      - "Guest Network isolated from main network"
+      - "Internet access working from Guest Network"
+    rollback_actions:
+      - "Disable Guest Network"
+      - "Move devices back to main network"
+
+  - name: "configure_access_control_rules"
+    assigned_to: "Human Administrator"
+    description: "Implement device-level access control and blocking rules"
+    estimated_duration: "20 minutes"
+    dependencies: ["enable_guest_network_isolation"]
+    validation:
+      - "IoT devices blocked from infrastructure range (68.40-52)"
+      - "Critical ports blocked from IoT devices"
+      - "Infrastructure devices have management access"
+    rollback_actions:
+      - "Remove all access control rules"
+      - "Restore default allow-all policy"
+
+  - name: "deploy_vpn_server"
+    assigned_to: "Human Administrator"
+    description: "Configure and test OpenVPN server for remote access"
+    estimated_duration: "25 minutes"
+    dependencies: ["configure_access_control_rules"]
+    validation:
+      - "VPN server operational on port 1194 UDP"
+      - "Client certificates generated and tested"
+      - "External VPN connection successful"
+    rollback_actions:
+      - "Disable VPN server"
+      - "Remove VPN configuration"
+
+  - name: "configure_emergency_access_ports"
+    assigned_to: "Human Administrator"
+    description: "Set up emergency RDP and SSH port forwarding"
+    estimated_duration: "15 minutes"
+    dependencies: ["deploy_vpn_server"]
+    validation:
+      - "Emergency RDP ports (3390-3392) configured"
+      - "Emergency SSH ports (2222-2223) configured"
+      - "External access tested and working"
+    rollback_actions:
+      - "Remove port forwarding rules"
+      - "Block external access ports"
+
+  - name: "implement_qos_prioritization"
+    assigned_to: "Human Administrator"
+    description: "Configure QoS to prioritize DoggPack infrastructure traffic"
+    estimated_duration: "10 minutes"
+    dependencies: ["configure_emergency_access_ports"]
+    validation:
+      - "DoggPack infrastructure (40-52) highest priority"
+      - "VPN traffic prioritized"
+      - "Gaming/media traffic appropriately prioritized"
+    rollback_actions:
+      - "Disable QoS"
+      - "Return to default traffic handling"
+
+  - name: "enable_advanced_security_features"
+    assigned_to: "Human Administrator"
+    description: "Activate all available Deco security features"
+    estimated_duration: "15 minutes"
+    dependencies: ["implement_qos_prioritization"]
+    validation:
+      - "Intrusion detection enabled"
+      - "Infected device detection enabled"
+      - "Malicious website blocking enabled"
+    rollback_actions:
+      - "Disable advanced security features"
+      - "Return to basic security only"
+
+  - name: "validate_dns_integration"
+    assigned_to: "CCN"
+    description: "Ensure DNS server integration remains operational"
+    estimated_duration: "10 minutes"
+    dependencies: ["enable_advanced_security_features"]
+    validation:
+      - "Local domain resolution still working"
+      - "External DNS forwarding operational"
+      - "All devices receiving correct DNS settings"
+    rollback_actions:
+      - "Restore DNS to 1.1.1.1 if NasDogg fails"
+      - "Troubleshoot DNS server connectivity"
+
+  - name: "comprehensive_security_testing"
+    assigned_to: "CCW"
+    description: "Test all security layers and access controls"
+    estimated_duration: "30 minutes"
+    dependencies: ["validate_dns_integration"]
+    validation:
+      - "IoT isolation verified (cannot access infrastructure)"
+      - "VPN access working from external networks"
+      - "Emergency access ports functional"
+      - "All security rules operating correctly"
+    rollback_actions:
+      - "Document any security gaps found"
+      - "Implement additional hardening if needed"
+
+security_configuration:
+  wifi_segmentation:
+    main_network:
+      name: "DoggPackNet"
+      password: "[Use existing strong password]"
+      devices: ["Infrastructure", "Gaming", "Personal", "Trusted"]
+      access: "full_network"
+      
+    guest_network:
+      name: "DoggPackIoT"
+      password: "[Generate strong 16-character password]"
+      devices: ["IoT", "Smart home", "Untrusted devices"]
+      isolation: "isolated_from_main"
+      bandwidth_limit: "50%"
+
+  access_control_rules:
+    iot_isolation:
+      - rule: "Block Guest Network → Infrastructure Range"
+        source: "Guest Network devices"
+        destination: "192.168.68.40-52"
+        action: "block"
+        logging: "enabled"
+        
+      - rule: "Block IoT → Administrative Ports"
+        source: "Guest Network devices"
+        destination: "Any, Ports 22,23,80,443,3389,5000-5050"
+        action: "block"
+        logging: "enabled"
+        
+    infrastructure_management:
+      - rule: "Infrastructure Full Access"
+        source: "192.168.68.40-52"
+        destination: "Any"
+        action: "allow"
+        logging: "enabled"
+
+  vpn_configuration:
+    server_settings:
+      protocol: "OpenVPN UDP"
+      port: 1194
+      encryption: "AES-256-CBC"
+      authentication: "SHA256"
+      compression: "enabled"
+      
+    client_profiles:
+      admin:
+        access: "full_network"
+        routes: ["192.168.68.0/24"]
+        dns: ["192.168.68.40", "1.1.1.1"]
+        
+      user:
+        access: "infrastructure_services"
+        routes: ["192.168.68.40-52/32"]
+        dns: ["192.168.68.40", "1.1.1.1"]
+        
+      emergency:
+        access: "critical_systems_only"
+        routes: ["192.168.68.40/32", "192.168.68.50-52/32"]
+        dns: ["1.1.1.1"]
+
+  emergency_access:
+    rdp_forwarding:
+      nucdogg:
+        external_port: 3390
+        internal_ip: "192.168.68.50"
+        internal_port: 3389
+        
+      workdogg:
+        external_port: 3391
+        internal_ip: "192.168.68.51"
+        internal_port: 3389
+        
+      zendogg:
+        external_port: 3392
+        internal_ip: "192.168.68.52"
+        internal_port: 3389
+        
+    ssh_forwarding:
+      nucdogg:
+        external_port: 2222
+        internal_ip: "192.168.68.50"
+        internal_port: 22
+        
+      workdogg:
+        external_port: 2223
+        internal_ip: "192.168.68.51"
+        internal_port: 22
+
+  qos_configuration:
+    priority_levels:
+      highest:
+        devices: ["192.168.68.40-52"]
+        services: ["VPN (1194)", "DNS (53)"]
+        
+      high:
+        services: ["Video conferencing", "VoIP", "Gaming"]
+        
+      medium:
+        services: ["Web browsing", "General applications"]
+        
+      low:
+        services: ["File downloads", "OS updates", "IoT updates"]
+
+  advanced_security:
+    intrusion_detection: "enabled"
+    infected_device_detection: "enabled"
+    malicious_website_blocking: "enabled"
+    automatic_threat_blocking: "enabled"
+    security_log_retention: "30_days"
+
+testing_strategy:
+  iot_isolation_testing:
+    - test: "IoT device cannot ping infrastructure"
+      command: "ping 192.168.68.50 (from IoT device)"
+      expected: "timeout_or_blocked"
+      
+    - test: "IoT device cannot access admin services"
+      command: "curl http://192.168.68.40:5000 (from IoT device)"
+      expected: "connection_refused"
+      
+    - test: "IoT device has internet access"
+      command: "ping 8.8.8.8 (from IoT device)"
+      expected: "successful"
+
+  vpn_functionality_testing:
+    - test: "VPN connection from external network"
+      setup: "Mobile hotspot, OpenVPN client"
+      expected: "successful_connection"
+      
+    - test: "Internal access via VPN"
+      command: "ping nasdogg.doggpack.local (via VPN)"
+      expected: "successful_resolution_and_ping"
+      
+    - test: "RDP access via VPN"
+      command: "mstsc /v:nucdogg.doggpack.local (via VPN)"
+      expected: "successful_rdp_connection"
+
+  emergency_access_testing:
+    - test: "Emergency RDP access"
+      command: "mstsc /v:external_ip:3390 (VPN disconnected)"
+      expected: "successful_connection"
+      
+    - test: "Emergency SSH access"
+      command: "ssh -p 2222 user@external_ip (VPN disconnected)"
+      expected: "successful_connection"
+      
+    - test: "Non-emergency ports blocked"
+      command: "telnet external_ip 80"
+      expected: "connection_refused"
+
+  dns_integration_testing:
+    - test: "Local domain resolution"
+      command: "nslookup nasdogg.doggpack.local"
+      expected: "returns_192.168.68.40"
+      
+    - test: "External domain resolution"
+      command: "nslookup google.com"
+      expected: "resolved_via_cloudflare_forwarder"
+      
+    - test: "DNS from all network zones"
+      setup: "Test from main and guest networks"
+      expected: "consistent_dns_resolution"
+
+performance_expectations:
+  network_performance:
+    local_dns_resolution: "< 10ms"
+    internet_speed_impact: "< 5% reduction"
+    vpn_throughput: "85-90% of base speed"
+    rdp_connection_time: "< 5 seconds"
+    
+  security_overhead:
+    access_control_latency: "< 1ms additional"
+    intrusion_detection_impact: "< 2% CPU usage"
+    qos_processing_overhead: "minimal"
+    
+  reliability_targets:
+    vpn_uptime: "> 99%"
+    dns_resolution_success: "100%"
+    emergency_access_availability: "> 99%"
+
+monitoring_and_alerting:
+  security_monitoring:
+    - event: "Failed VPN connection attempts"
+      threshold: "3 failures from same IP"
+      action: "log_and_alert"
+      
+    - event: "Blocked access attempts from IoT"
+      threshold: "Any blocked infrastructure access"
+      action: "log_for_analysis"
+      
+    - event: "Unusual traffic patterns"
+      threshold: "50% deviation from baseline"
+      action: "investigate"
+
+  operational_monitoring:
+    - metric: "DNS resolution time"
+      target: "< 10ms"
+      check_interval: "5 minutes"
+      
+    - metric: "VPN server status"
+      target: "operational"
+      check_interval: "1 minute"
+      
+    - metric: "Internet connectivity"
+      target: "< 50ms latency to 8.8.8.8"
+      check_interval: "1 minute"
+
+rollback_plan:
+  trigger_conditions:
+    - "Network connectivity lost for > 5 minutes"
+    - "DNS resolution fails completely"
+    - "VPN server unreachable from external networks"
+    - "IoT devices cannot access internet"
+    - "Emergency access ports not responding"
+    
+  rollback_steps:
+    - name: "immediate_connectivity_restore"
+      description: "Disable all security features to restore basic connectivity"
+      estimated_duration: "2 minutes"
+      actions:
+        - "Disable Guest Network"
+        - "Remove all Access Control rules"
+        - "Disable advanced security features"
+        
+    - name: "validate_basic_functionality"
+      description: "Test internet access and basic network operations"
+      estimated_duration: "5 minutes"
+      actions:
+        - "Test internet from multiple devices"
+        - "Verify DNS resolution working"
+        - "Confirm all devices can communicate"
+        
+    - name: "selective_feature_restoration"
+      description: "Re-enable security features one by one"
+      estimated_duration: "15 minutes"
+      actions:
+        - "Re-enable Guest Network if successful"
+        - "Re-add Access Control rules if successful"
+        - "Re-enable VPN if successful"
+        
+  recovery_time_objective: "10 minutes"
+  maximum_downtime_tolerance: "15 minutes"
+  data_loss_risk: "None - configuration only"
+
+integration_with_phase_3:
+  foundation_infrastructure_preparation:
+    docker_networking:
+      - "Custom Docker networks for service isolation"
+      - "Container DNS resolution via NasDogg"
+      - "Service discovery using local domains"
+      
+    mcp_server_security:
+      - "Bind MCP servers to localhost (127.0.0.1)"
+      - "Use nginx reverse proxy for external access"
+      - "Implement certificate-based authentication"
+      
+    monitoring_integration:
+      - "Network security monitoring"
+      - "Container access logging"
+      - "API endpoint protection"
+
+success_metrics:
+  security_effectiveness:
+    iot_isolation_success: "100% (no successful infrastructure access)"
+    vpn_connection_reliability: "> 99%"
+    emergency_access_availability: "100%"
+    unauthorized_access_attempts: "0% successful"
+    
+  operational_performance:
+    network_speed_retention: "> 95%"
+    dns_resolution_reliability: "100%"
+    service_availability: "> 99.5%"
+    
+  user_experience:
+    vpn_connection_time: "< 10 seconds"
+    rdp_session_establishment: "< 5 seconds"
+    local_service_access_time: "< 2 seconds"
+
+approval:
+  required_approvals:
+    - "Phase 1 completion verified (DNS operational)"
+    - "Hardware limitation assessment confirmed"
+    - "Security approach reviewed and approved"
+    - "Testing procedures validated"
+    - "Rollback procedures tested"
+  
+  approved_by: ""
+  approved_date: ""
+  deployment_authorized: false
+
+execution_log:
+  start_time: ""
+  end_time: ""
+  actual_duration: ""
+  steps_completed: []
+  issues_encountered: []
+  final_status: ""
+  security_validation_results: []
+  performance_baseline_post_implementation: []
+
+next_phase_readiness:
+  phase_3_prerequisites:
+    - "Multi-layered security operational"
+    - "VPN access tested and reliable"
+    - "DNS infrastructure proven stable"
+    - "Emergency access procedures validated"
+    
+  foundation_infrastructure_enablers:
+    - "Secure Docker deployment environment"
+    - "Isolated container networks possible"
+    - "MCP server security model defined"
+    - "Monitoring and alerting framework ready"
+    
+  success_criteria_for_phase_3_commencement:
+    - "All security tests passing for 24 hours"
+    - "VPN connectivity validated from multiple external networks"
+    - "IoT isolation confirmed with multiple device types"
+    - "Emergency procedures tested and documented"
+
+post_implementation_tasks:
+  immediate_follow_up:
+    - "Monitor security logs for first 48 hours"
+    - "Validate performance meets expectations"
+    - "Document any configuration adjustments needed"
+    - "Schedule Phase 3 Foundation Infrastructure deployment"
+    
+  ongoing_maintenance:
+    - "Weekly security log review"
+    - "Monthly VPN certificate status check"
+    - "Quarterly security rule effectiveness review"
+    - "Annual hardware capability reassessment"
