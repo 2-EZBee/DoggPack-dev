@@ -1,148 +1,191 @@
-# Network Implementation Quick Reference
+# DoggPack Network Quick Reference
 
-## 🚀 DoggPack Network Configuration Cheat Sheet
+## 🚀 Single-Network Security Configuration
 
-### **Current → Target Migration**
+### **Current Network Status**
 ```
-FROM: 192.168.68.0/24 (Flat Network)
-TO:   Segmented VLANs with Security
+Network:        192.168.68.0/24 (Single flat network)
+Gateway:        192.168.68.1 (TP-Link Deco X20 DSL)
+DNS Server:     192.168.68.40 (NasDogg) ✅ OPERATIONAL
+DHCP Range:     192.168.68.100-250
+Internet:       144.6.156.14/22 (VDSL2: 82.9/22.6 Mbps)
+Active Devices: 35 IP assignments
+```
+
+**⚠️ Hardware Reality: VLAN segmentation NOT supported by Deco X20 DSL**
+
+---
+
+## 🏠 **DoggPack Infrastructure Addresses**
+
+### **Core Infrastructure (Static Assignments)**
+```
+192.168.68.40  →  NasDogg       ✅ DNS Server, Storage (OPERATIONAL)
+192.168.68.50  →  NucDogg       🎯 Infrastructure Hub, Docker Manager
+192.168.68.51  →  WorkDogg      🎯 Development Machine, Docker Worker
+192.168.68.52  →  ZenDogg       🎯 Primary Workstation, Control Interface
+```
+
+### **Device Categories (Dynamic Assignment)**
+```
+192.168.68.100-150  →  Smart Home/IoT    (Guest Network isolation)
+192.168.68.151-200  →  Gaming/Media      (Main network, QoS priority)
+192.168.68.201-250  →  Personal/Mobile   (Main network, standard access)
 ```
 
 ---
 
-## 📊 VLAN Configuration
+## 🌐 **DNS Configuration (Phase 1 Complete ✅)**
 
-| VLAN | Purpose | Subnet | Gateway | DHCP Range |
-|------|---------|--------|---------|------------|
-| 10 | Infrastructure | 192.168.10.0/24 | .10.1 | .10.100-.10.199 |
-| 20 | SmartHome | 192.168.20.0/24 | .20.1 | .20.100-.20.199 |
-| 30 | Gaming | 192.168.30.0/24 | .30.1 | .30.100-.30.199 |
-| 40 | Personal | 192.168.40.0/24 | .40.1 | .40.100-.40.199 |
-
----
-
-## 🏠 Static IP Assignments
-
-### **DoggPack Core Infrastructure (VLAN 10)**
+### **Local DNS Server**: 192.168.68.40 (NasDogg)
 ```
-192.168.10.40  →  NasDogg       (DNS Server, Storage)
-192.168.10.50  →  NucDogg       (Infrastructure Hub, Docker Manager)
-192.168.10.51  →  WorkDogg      (Development Machine, Docker Worker)
-192.168.10.52  →  ZenDogg       (Primary Workstation, Control Interface)
-```
-
-### **Current Device Migration**
-```
-OLD IP              NEW IP           DEVICE
-192.168.68.40   →   192.168.10.40   NasDogg (Synology)
-192.168.68.XXX  →   192.168.10.50   NucDogg
-192.168.68.XXX  →   192.168.10.51   WorkDogg  
-192.168.68.XXX  →   192.168.10.52   ZenDogg
-
-Gaming devices  →   192.168.30.XXX  (Xbox, consoles)
-Smart devices   →   192.168.20.XXX  (Tuya, Nest Hub)
-Personal devices→   192.168.40.XXX  (Phones, tablets)
-```
-
----
-
-## 🌐 DNS Configuration
-
-### **Local DNS Server**: 192.168.10.40 (NasDogg)
-```
-Primary DNS:    192.168.10.40
-Secondary DNS:  1.1.1.1
+Status:         ✅ OPERATIONAL
+Primary DNS:    192.168.68.40 (NasDogg)
+Secondary DNS:  1.1.1.1 (Cloudflare Forwarder)
 Search Domain:  doggpack.local
 ```
 
-### **Local Domain Records**
+### **Local Domain Records (Active ✅)**
 ```
-nasdogg.doggpack.local   →  192.168.10.40
-nucdogg.doggpack.local   →  192.168.10.50
-workdogg.doggpack.local  →  192.168.10.51
-zendogg.doggpack.local   →  192.168.10.52
-mcp.doggpack.local       →  192.168.10.50
-docker.doggpack.local    →  192.168.10.50
+nasdogg.doggpack.local   →  192.168.68.40  ✅
+nucdogg.doggpack.local   →  192.168.68.50  🎯
+workdogg.doggpack.local  →  192.168.68.51  🎯
+zendogg.doggpack.local   →  192.168.68.52  🎯
+mcp.doggpack.local       →  192.168.68.50  🎯
+docker.doggpack.local    →  192.168.68.50  🎯
+```
+
+### **External Domain (Planned)**
+```
+doggpack.net             →  Dynamic IP     🎯
+vpn.doggpack.net         →  Dynamic IP     🎯  
+home.doggpack.net        →  Dynamic IP     🎯
 ```
 
 ---
 
-## 🔐 VPN Configuration
+## 🛡️ **Multi-Layered Security Strategy**
 
-### **OpenVPN Server Settings**
+### **Layer 1: WiFi-Based Segmentation**
 ```
-Port:        1194 UDP
-Encryption:  AES-256
-Protocol:    OpenVPN
-Auth:        Certificate + Password
-External:    vpn.doggpack.net:1194
+Main Network:    DoggPackNet     (Infrastructure + Trusted devices)
+Guest Network:   DoggPackIoT     (Smart home devices - ISOLATED)
+Admin Network:   DoggPackAdmin   (Management access - if available)
+```
+
+### **Layer 2: Access Control Rules (Deco Feature)**
+```
+BLOCK: Guest Network → Main Network devices
+BLOCK: IoT devices → DoggPack infrastructure (50-52)
+BLOCK: Unknown devices → Critical services
+ALLOW: Infrastructure → All (management access)
+```
+
+### **Layer 3: Firewall Rules (Port-Based)**
+```
+BLOCK: External → All except VPN/RDP/SSH ports
+BLOCK: IoT → TCP/UDP ports 2200-2299 (MCP servers)
+BLOCK: IoT → TCP/UDP ports 8100-8199 (Web interfaces)
+ALLOW: Infrastructure → All ports (management)
+```
+
+### **Layer 4: Service-Level Security**
+```
+MCP Servers:     Certificate authentication
+Docker API:      TLS with client certificates  
+SSH:             Key-based authentication only
+RDP:             Network Level Authentication
+```
+
+---
+
+## 🔐 **Remote Access Configuration**
+
+### **VPN Server (TP-Link Deco Built-in)**
+```
+Protocol:        OpenVPN
+Port:            1194 UDP
+Encryption:      AES-256
+Authentication:  Certificate + Password
+External Access: vpn.doggpack.net:1194
 ```
 
 ### **VPN Client Profiles**
 ```
-admin:     Full network access (all VLANs)
-user:      Infrastructure only (VLAN 10)
-readonly:  Monitoring only (NasDogg)
+admin:           Full network access + infrastructure management
+user:            Limited access to infrastructure services only  
+readonly:        Monitoring and status checking only
+emergency:       Critical system access during outages
 ```
 
----
-
-## 🖥️ Remote Access Ports
-
-### **RDP Access (Through VPN)**
+### **RDP Access (Through VPN Preferred)**
 ```
-NucDogg:   nucdogg.doggpack.local:3389
-WorkDogg:  workdogg.doggpack.local:3389  
-ZenDogg:   zendogg.doggpack.local:3389
-```
+Internal Access (VPN connected):
+  NucDogg:   mstsc /v:nucdogg.doggpack.local:3389
+  WorkDogg:  mstsc /v:workdogg.doggpack.local:3389
+  ZenDogg:   mstsc /v:zendogg.doggpack.local:3389
 
-### **External RDP (Emergency Only)**
-```
-NucDogg:   home.doggpack.net:3390
-WorkDogg:  home.doggpack.net:3391
-ZenDogg:   home.doggpack.net:3392
+External Access (Emergency Only):
+  NucDogg:   mstsc /v:home.doggpack.net:3390
+  WorkDogg:  mstsc /v:home.doggpack.net:3391
+  ZenDogg:   mstsc /v:home.doggpack.net:3392
 ```
 
 ### **SSH Access**
 ```
-NucDogg:   ssh -p 2222 user@nucdogg.doggpack.local
-WorkDogg:  ssh -p 2223 user@workdogg.doggpack.local
-External:  ssh -p 2222 user@home.doggpack.net
+Internal (VPN):
+  ssh -p 2222 user@nucdogg.doggpack.local
+  ssh -p 2223 user@workdogg.doggpack.local
+
+External (Emergency):
+  ssh -p 2222 user@home.doggpack.net
+  ssh -p 2223 user@home.doggpack.net
 ```
 
 ---
 
-## 🔥 Firewall Rules Summary
+## 🔥 **Security Rules Summary**
 
-### **Inter-VLAN Access**
+### **Access Control Matrix**
 ```
-✅ Infrastructure → All VLANs    (Management)
-✅ Personal → Infrastructure      (Limited services)
-❌ SmartHome → Infrastructure     (Blocked)
-❌ SmartHome → Personal          (Blocked)
-❌ Gaming → Infrastructure        (Blocked)
+Device Category    → Infrastructure  → Internet  → Other Devices
+Infrastructure     →     ALLOW       →  ALLOW    →    ALLOW
+Gaming/Media       →     BLOCK       →  ALLOW    →    ALLOW
+Personal/Mobile    →   LIMITED       →  ALLOW    →    ALLOW
+Smart Home/IoT     →     BLOCK       →  ALLOW    →    BLOCK
+Guest Devices      →     BLOCK       →  ALLOW    →    BLOCK
 ```
 
-### **External Access Ports**
+### **Critical Port Protection**
 ```
-1194/UDP  →  VPN Server
-3390/TCP  →  NucDogg RDP
-3391/TCP  →  WorkDogg RDP  
-3392/TCP  →  ZenDogg RDP
-2222/TCP  →  NucDogg SSH
-2223/TCP  →  WorkDogg SSH
+ALWAYS BLOCKED FROM INTERNET:
+  22, 23      → SSH, Telnet
+  3389        → Default RDP
+  445, 139    → SMB/CIFS
+  5432, 3306  → Database ports
+
+BLOCKED FROM IOT DEVICES:
+  2200-2299   → MCP coordination ports
+  8100-8199   → Service web interfaces
+  8300-8399   → API endpoints
+
+ALLOWED EXTERNAL (Emergency):
+  1194/UDP    → VPN Server
+  3390-3392   → Emergency RDP
+  2222-2223   → Emergency SSH
 ```
 
 ---
 
-## ☁️ Cloudflare DNS Records
+## ☁️ **Cloudflare Integration** 
 
-### **Required DNS Records**
+### **DNS Records (Planned)**
 ```
-A     vpn.doggpack.net      →  Dynamic IP  (🔒 Not Proxied)
-A     home.doggpack.net     →  Dynamic IP  (🛡️ Proxied)
-CNAME mcp.doggpack.net      →  home.doggpack.net
-CNAME remote.doggpack.net   →  home.doggpack.net
+Type  Name                 Target          Proxy  Purpose
+A     vpn.doggpack.net     Dynamic IP      No     VPN access
+A     home.doggpack.net    Dynamic IP      Yes    Web services  
+CNAME mcp.doggpack.net     home            Yes    MCP interfaces
+CNAME remote.doggpack.net  home            Yes    Remote access
 ```
 
 ### **Security Settings**
@@ -151,145 +194,255 @@ SSL Mode:           Full (Strict)
 Min TLS Version:    1.2
 Always HTTPS:       Enabled
 Security Level:     Medium
+DDoS Protection:    Enabled
 ```
 
 ---
 
-## ⚡ Quick Implementation Steps
+## ⚡ **Implementation Steps**
 
-### **1. Router Backup (2 min)**
-```bash
-# Access router admin panel
-# System → Backup → Save current config
-```
+### **Phase 2: Single-Network Security (Next)**
 
-### **2. Create VLANs (15 min)**
+#### **1. Enable Guest Network (10 min)**
 ```
-Network → VLANs → Add:
-- VLAN 10: Infrastructure
-- VLAN 20: SmartHome  
-- VLAN 30: Gaming
-- VLAN 40: Personal
+Deco App → WiFi → Guest Network → Enable
+Name: DoggPackIoT
+Password: [Strong password]
+Access: Isolated from main network
 ```
 
-### **3. Configure DHCP (10 min)**
+#### **2. Configure Access Control (15 min)**
 ```
-Set DHCP ranges for each VLAN
-Set DNS server to 192.168.10.40
-Enable DHCP reservations for static IPs
-```
-
-### **4. Setup Firewall (10 min)**
-```
-Create firewall rules between VLANs
-Block SmartHome → Infrastructure
-Allow Infrastructure → All
+Deco App → Advanced → Access Control → Add Rules
+Block: Guest Network devices → Infrastructure IPs
+Block: Specific MAC addresses → Critical ports
+Log: All blocked attempts for monitoring
 ```
 
-### **5. Enable VPN (15 min)**
+#### **3. Set Up VPN Server (20 min)**
 ```
-VPN → OpenVPN Server → Enable
-Port: 1194, Encryption: AES-256
-Generate certificates
-Create client profiles
+Deco App → Advanced → VPN Server → OpenVPN
+Enable server on port 1194
+Generate certificates for admin/user profiles  
+Configure client access levels
+Test connection from external network
 ```
 
-### **6. Configure NasDogg DNS (15 min)**
+#### **4. Configure Port Forwarding (15 min)**
 ```
-Synology → DNS Server → Enable
-Create zone: doggpack.local
-Add A records for all machines
-Set forwarders: 1.1.1.1, 1.0.0.1
+Emergency RDP:
+  3390 → 192.168.68.50:3389 (NucDogg)
+  3391 → 192.168.68.51:3389 (WorkDogg)
+  3392 → 192.168.68.52:3389 (ZenDogg)
+
+Emergency SSH:
+  2222 → 192.168.68.50:22 (NucDogg)
+  2223 → 192.168.68.51:22 (WorkDogg)
+```
+
+#### **5. Configure QoS (10 min)**
+```
+Deco App → Advanced → QoS → Enable
+High Priority: DoggPack Infrastructure (50-52)
+Medium Priority: Gaming/Media devices
+Low Priority: IoT/Guest devices
+```
+
+#### **6. Set DNS Server (5 min)**
+```
+Deco App → Internet → DNS Settings
+Primary DNS: 192.168.68.40
+Secondary DNS: 1.1.1.1
+Validate: nslookup nucdogg.doggpack.local
 ```
 
 ---
 
-## 🧪 Testing Commands
+## 🧪 **Testing & Validation**
 
-### **Network Connectivity**
+### **DNS Resolution Test**
 ```bash
-# Test from each VLAN
-ping 8.8.8.8                    # Internet
-ping nasdogg.doggpack.local     # Local DNS
-nslookup google.com             # External DNS
-```
-
-### **VPN Testing**
-```bash
-# Connect VPN then test
-curl http://nasdogg.doggpack.local
-ssh nucdogg.doggpack.local
+# From any device on network
+nslookup nasdogg.doggpack.local     # Should return 192.168.68.40
+nslookup google.com                 # Should resolve via forwarder
+ping nucdogg.doggpack.local         # Should work when NucDogg online
 ```
 
 ### **Security Validation**
 ```bash
-# External port scan
-nmap -sS home.doggpack.net
-# Should only show: 1194, 3390-3392, 2222-2223
+# From IoT device (should FAIL):
+telnet 192.168.68.50 22             # SSH to NucDogg
+curl http://192.168.68.50:8100      # MCP server
+ping 192.168.68.52                  # ZenDogg workstation
+
+# From infrastructure (should WORK):
+ssh nucdogg.doggpack.local          # SSH access
+curl http://docker.doggpack.local:2376  # Docker API
+```
+
+### **VPN Connection Test**
+```bash
+# Connect VPN client, then test:
+ping nasdogg.doggpack.local         # Should work through VPN
+mstsc /v:nucdogg.doggpack.local     # RDP should connect
+ssh user@workdogg.doggpack.local    # SSH should work
+```
+
+### **External Access Test**
+```bash
+# From outside network (VPN disconnected):
+nmap home.doggpack.net              # Should only show: 1194, 3390-3392, 2222-2223
+telnet home.doggpack.net 3390       # Emergency RDP should work
 ```
 
 ---
 
-## ⚠️ Emergency Rollback
+## 🔧 **Port Allocation Strategy**
 
-### **If Something Goes Wrong**
+### **MCP Services (Single Network)**
 ```
-1. Access router admin panel
-2. System → Restore → Load backup
-3. Reboot router
-4. Disable VLANs if needed
-5. Test basic internet connectivity
+8100-8199: MCP Server APIs          
+  8100 → Planning Coordinator MCP
+  8101 → Docker Management MCP  
+  8102 → Monitoring MCP
+  8103 → Knowledge Base MCP
+  8104 → Reserved for expansion
 ```
 
-### **Backup Communication**
+### **Web Interfaces**
 ```
-Mobile hotspot for emergency internet
-Physical access to router reset button
-Phone support: Aussie Broadband
+8200-8299: Service Web UIs
+  8200 → N8N Workflow Interface
+  8201 → Monitoring Dashboard (Grafana)
+  8202 → Container Registry UI
+  8203 → System Status Dashboard
+  8204 → Knowledge Management UI
+```
+
+### **Development Access**
+```
+2200-2299: Development Environments
+  2200 → CCN Development SSH
+  2201 → CCW Development SSH  
+  2202 → Shared Development Environment
+  2203 → Testing Environment
+```
+
+### **External Access Ports**
+```
+3000-3099: Public Service Access
+  3000 → Primary MCP Gateway
+  3001 → Public API Endpoint  
+  3002 → Status/Health Check API
+  3003 → Reserved for expansion
 ```
 
 ---
 
-## 📱 Quick Connection Guide
+## ⚠️ **Emergency Procedures**
 
-### **Connect via VPN**
+### **Total Network Reset**
 ```
-1. Install OpenVPN client
-2. Import .ovpn profile
-3. Connect to vpn.doggpack.net:1194
-4. Access: mstsc /v:nucdogg.doggpack.local
+1. Physical reset: Hold Deco reset button 10 seconds
+2. Reconfigure basic internet: WAN settings
+3. Restore DNS: Set to 192.168.68.40 (if NasDogg working)
+4. Test basic connectivity: ping 8.8.8.8
+5. Restore security rules: Guest network + access control
 ```
 
-### **Emergency Direct Access**
+### **DNS Server Failure**
 ```
-# If VPN fails:
-mstsc /v:home.doggpack.net:3390  # NucDogg
-ssh -p 2222 user@home.doggpack.net
+1. Temporary DNS: Change to 1.1.1.1 in Deco settings
+2. Access NasDogg: http://192.168.68.40:5000
+3. Restart DNS Server: Package Center → DNS Server → Restart
+4. Validate resolution: nslookup nasdogg.doggpack.local
+5. Switch back to 192.168.68.40 as primary DNS
+```
+
+### **VPN Connection Issues**
+```
+1. Check VPN server: Deco App → Advanced → VPN Server
+2. Regenerate certificates: Create new client profile
+3. Test internal access: Try emergency RDP ports
+4. Verify port forwarding: 1194 UDP should be open
+5. Check external IP: whatismyipaddress.com
 ```
 
 ---
 
-## 🎯 Success Validation
+## 📊 **Network Performance**
 
-### **✅ Network Working If:**
-- All devices get IP from correct VLAN
-- Can ping between allowed VLANs
-- Cannot ping between blocked VLANs
-- VPN connects from external network
-- Local domains resolve correctly
-- RDP works through VPN
+### **Expected Performance**
+```
+Local DNS Resolution:    < 10ms
+Internet Speed:          82.9 Mbps down, 22.6 Mbps up
+VPN Overhead:            ~10-15% speed reduction
+RDP Latency:             < 50ms on LAN, < 200ms via VPN
+Container Access:        Near-native performance
+```
 
-### **📊 Expected Results:**
-- Internet speed unchanged
-- Local access faster (local DNS)
-- Secure remote access working
-- Smart devices isolated
-- Gaming performance unchanged
+### **QoS Prioritization**
+```
+Highest:    DoggPack Infrastructure (192.168.68.50-52)
+High:       Video conferencing, VoIP
+Medium:     Gaming, streaming  
+Low:        File downloads, backups
+Lowest:     IoT device updates
+```
 
 ---
 
-**⏱️ Total Implementation Time: 2-3 hours**  
-**🛡️ Security Level: Enterprise-grade**  
-**🚀 DoggPack Ready: Yes**
+## 🎯 **Success Criteria**
 
-*Print this reference and keep handy during implementation!*
+### **✅ Single-Network Security Working If:**
+- IoT devices cannot access DoggPack infrastructure
+- VPN connects from external networks
+- Local domains resolve correctly (.doggpack.local)
+- Emergency RDP/SSH works from outside
+- Critical services only accessible via VPN
+- Guest network properly isolates devices
+
+### **📈 Expected Benefits:**
+- Enterprise-level security within consumer hardware
+- Centralized DNS with custom domains ✅
+- Secure remote access for development work
+- IoT device isolation without VLAN complexity
+- Professional infrastructure on home network
+- Zero-config local service discovery
+
+---
+
+## 🚀 **Integration with DoggPack**
+
+### **MCP Server Access (Post-Foundation)**
+```bash
+# Via VPN or from infrastructure:
+curl http://mcp.doggpack.local:8100/health      # Planning coordinator
+curl http://docker.doggpack.local:2376/version  # Docker API
+curl http://nucdogg.doggpack.local:8200         # N8N interface
+```
+
+### **Claude Development Environment**
+```bash  
+# SSH into development containers:
+ssh -p 2200 claude@nucdogg.doggpack.local       # CCN environment
+ssh -p 2201 claude@workdogg.doggpack.local      # CCW environment
+```
+
+### **Service Discovery**
+```bash
+# All services accessible via local DNS:
+http://mcp.doggpack.local:8100                  # MCP coordination
+http://docker.doggpack.local:2376               # Docker management
+http://monitor.doggpack.local:8201              # System monitoring
+http://knowledge.doggpack.local:8204            # Knowledge base
+```
+
+---
+
+**⏱️ Total Implementation Time: 1.5-2 hours**  
+**🛡️ Security Level: Enterprise-grade within consumer constraints**  
+**🚀 DoggPack Ready: After Phase 2 completion**  
+**✅ DNS Foundation: Already operational**
+
+*This reference reflects the hardware realities and provides achievable security within TP-Link Deco X20 DSL constraints!*
