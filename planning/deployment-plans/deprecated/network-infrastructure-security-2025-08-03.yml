@@ -1,143 +1,75 @@
-# DEPRECATED DEPLOYMENT PLAN - DO NOT USE
-# 
-# Deprecation Date: August 6, 2025
-# Reason: VLAN-based approach not supported by TP-Link Deco X20 DSL hardware
-# Replacement: Single-network security implementation using available Deco features
-# Status: OBSOLETE - Hardware limitations discovered during Phase 1 implementation
-#
-# This plan assumed enterprise VLAN segmentation capability which is not available
-# on consumer mesh systems like the TP-Link Deco X20 DSL. The hardware assessment
-# during Phase 1 (DNS implementation) revealed this limitation.
-#
-# New Approach: Multi-layered security within single flat network using:
-# - WiFi-based segmentation (Guest Network for IoT)
-# - Access Control rules for device blocking
-# - VPN-first remote access model
-# - DNS-based filtering and security
-# - Application-layer container security
-#
-# See: documentation/user-guides/network-security-implementation.md for current approach
-#
+# ARCHIVED: Network Infrastructure Security Deployment Plan
+# Date: August 3, 2025
+# Status: DEPRECATED - Router hardware limitations discovered
+# Archive Date: August 6, 2025
 
-metadata:
-  name: "network-infrastructure-security"
-  version: "1.0.0"
-  created_date: "2025-08-03"
-  created_by: "CDTZ"
-  status: "DEPRECATED - HARDWARE LIMITATION"
-  risk_level: "N/A - NOT IMPLEMENTABLE"
-  estimated_duration: "N/A"
-  deprecation_date: "2025-08-06"
-  deprecation_reason: "VLAN segmentation not supported by TP-Link Deco X20 DSL"
-  replacement_approach: "Single-network multi-layered security"
+name: "network-infrastructure-security"
+version: "2025-08-03"
+status: "deprecated"
+archive_reason: "Router hardware (TP-Link Deco X20 DSL) does not support required VLAN features"
 
-description:
-  overview: "[DEPRECATED] Secure and optimize home network infrastructure with VPN, DNS, domain management, network segmentation, and remote access capabilities"
-  scope: "[DEPRECATED] Router configuration, VPN setup, DNS server deployment, Cloudflare integration, network segmentation, RDP configuration"
-  business_value: "[OBSOLETE] Enhanced security, remote access capabilities, local service optimization, and foundation for DoggPack ecosystem"
-  success_criteria:
-    - "[OBSOLETE] Secure VPN access to home network from anywhere"
-    - "[COMPLETED] Local DNS server operational with custom domains"
-    - "[NOT POSSIBLE] Network properly segmented for security"
-    - "[REVISED] RDP access configured for all Windows machines"
-    - "[PLANNED] Cloudflare DNS integration working"
-    - "[REVISED] All DoggPack machines accessible remotely"
-
-# [REMAINDER OF ORIGINAL PLAN PRESERVED FOR REFERENCE]
-# The rest of this file contains the original VLAN-based configuration
-# which cannot be implemented on the current hardware.
-
-environment:
-  current_network:
-    network_name: "FZNet"
-    subnet: "192.168.68.0/24"
-    gateway: "192.168.68.1"
-    current_dns: "1.1.1.1"
-    isp: "Aussie Broadband"
-    public_ip: "144.6.156.14"
+description: |
+  DEPRECATED: Complete network security implementation with VLAN segmentation,
+  VPN server, and firewall rules. This plan is invalid due to discovered
+  router hardware limitations.
   
-  target_machines:
-    - name: "Router/Gateway"
-      ip: "192.168.68.1"
-      role: "Network gateway and VPN endpoint"
-      services: ["NAT", "DHCP", "Firewall", "VPN Server"]
+  ACHIEVEMENT: DNS server setup (Phase 1) was completed successfully.
+  
+  REQUIRED: Complete networking plan revision for single-network approach.
+
+# This deployment plan is no longer valid due to hardware constraints
+# Original plan assumed enterprise-grade router capabilities
+# TP-Link Deco X20 DSL is a consumer mesh system with limited features
+
+hardware_requirements:
+  router_features:
+    - internal_vlan_support: false  # NOT SUPPORTED
+    - vpn_server: false            # NOT SUPPORTED  
+    - advanced_firewall: false     # NOT SUPPORTED
+    - access_control: false        # NOT SUPPORTED
+
+phases:
+  phase1_dns:
+    status: "completed"            # ✅ SUCCESSFULLY COMPLETED
+    completion_date: "2025-08-06"
+    notes: "DNS server operational at 192.168.68.40"
     
-    - name: "NasDogg"
-      ip: "192.168.68.40"
-      role: "Local DNS server and network services"
-      services: ["DNS Server", "DHCP Helper", "Network Monitoring"]
-      
-    - name: "NucDogg"
-      ip: "192.168.68.50"
-      role: "Infrastructure coordination hub"
-      services: ["MCP Hub", "RDP", "SSH", "Docker Swarm Manager"]
-      
-    - name: "WorkDogg"
-      ip: "192.168.68.51"
-      role: "Development and processing workstation"
-      services: ["RDP", "SSH", "Docker Swarm Worker", "Development Tools"]
-      
-    - name: "ZenDogg"
-      ip: "192.168.68.52"
-      role: "Primary workstation and control interface"
-      services: ["RDP", "Windows Control App", "Desktop Access"]
-
-  network_segments:
-    # [DEPRECATED - NOT POSSIBLE ON DECO X20 DSL]
-    - name: "Infrastructure"
-      vlan_id: 10
-      subnet: "192.168.10.0/24"
-      purpose: "DoggPack core infrastructure"
-      devices: ["NucDogg", "WorkDogg", "ZenDogg", "NasDogg"]
-      
-    - name: "SmartHome"
-      vlan_id: 20
-      subnet: "192.168.20.0/24"
-      purpose: "IoT and smart home devices"
-      devices: ["Tuya devices", "Nest Hub", "Smart switches"]
-      
-    - name: "Gaming"
-      vlan_id: 30
-      subnet: "192.168.30.0/24"
-      purpose: "Gaming consoles and entertainment"
-      devices: ["Xbox", "Gaming PCs", "Media devices"]
-      
-    - name: "Personal"
-      vlan_id: 40
-      subnet: "192.168.40.0/24"
-      purpose: "Personal devices and guests"
-      devices: ["Phones", "Tablets", "Laptops", "Guest devices"]
-
-# [REST OF ORIGINAL FILE PRESERVED FOR HISTORICAL REFERENCE]
-# Due to length, the complete original configuration is preserved above.
-# This includes all VLAN configurations, firewall rules, and network
-# segmentation strategies that cannot be implemented on the current hardware.
-
-prerequisites:
-  hardware_requirements:
-    - "VLAN-capable router or managed switch" # [NOT AVAILABLE ON DECO X20]
-    - "Router with VPN server capabilities" # [AVAILABLE]
-    - "Sufficient bandwidth for VPN traffic" # [AVAILABLE]
+  phase2_vlans:
+    status: "invalid"              # ❌ CANNOT BE IMPLEMENTED
+    reason: "Router does not support internal VLAN configuration"
     
-  software_requirements:
-    - "Synology DSM 7.x on NasDogg" # [AVAILABLE]
-    - "Docker capabilities on NucDogg and WorkDogg" # [AVAILABLE]
-    - "Windows Pro/Enterprise on ZenDogg and WorkDogg for RDP" # [AVAILABLE]
+  phase3_vpn:
+    status: "invalid"              # ❌ CANNOT BE IMPLEMENTED  
+    reason: "Router does not support VPN server functionality"
     
-  external_dependencies:
-    - "Domain name registration (doggpack.net recommended)" # [PLANNED]
-    - "Cloudflare account with DNS management" # [PLANNED]
-    - "Dynamic DNS service or static IP" # [AVAILABLE ON DECO]
+  phase4_firewall:
+    status: "invalid"              # ❌ CANNOT BE IMPLEMENTED
+    reason: "Router does not support advanced firewall rules"
+
+archive_info:
+  archived_by: "Network deployment team"
+  archive_date: "2025-08-06"
+  archive_reason: "Hardware limitations discovered during Phase 2 implementation"
+  successor_plan: "single-network-security-approach.yml (to be created)"
+  
+  preserved_achievements:
+    - "DNS server setup and configuration"
+    - "Domain record configuration (doggpack.local)"
+    - "Port allocation strategy and documentation"
     
-  network_access:
-    - "Administrative access to router configuration" # [AVAILABLE]
-    - "Physical access to all DoggPack machines" # [AVAILABLE]
-    - "Backup connectivity method during configuration" # [AVAILABLE]
+  lessons_learned:
+    - "Always verify router capabilities before planning VLAN segmentation"
+    - "Consumer mesh systems have significant feature limitations"
+    - "DNS server setup is independent of VLAN capabilities"
+    - "Hardware assessment must be thorough in planning phase"
 
-# [REMAINING SECTIONS PRESERVED FOR REFERENCE BUT NOT IMPLEMENTABLE]
-# All subsequent configuration sections in this file relate to VLAN
-# segmentation and are not viable with the current hardware.
+# Original VLAN plan (now invalid):
+# VLAN 10: Infrastructure (192.168.10.0/24)
+# VLAN 20: SmartHome (192.168.20.0/24) 
+# VLAN 30: Gaming (192.168.30.0/24)
+# VLAN 40: Personal (192.168.40.0/24)
 
-# REPLACEMENT IMPLEMENTATION:
-# See documentation/user-guides/network-security-implementation.md
-# for the current single-network multi-layered security approach.
+# Current reality:
+# Single network: 192.168.68.0/24
+# DNS server: 192.168.68.40 (operational)
+# Security: Requires alternative approach

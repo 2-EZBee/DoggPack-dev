@@ -1,0 +1,68 @@
+# ARCHIVED: Single Network Security Implementation Plan  
+# Date: August 6, 2025
+# Status: DEPRECATED - Created before discovering full router limitations
+# Archive Date: August 6, 2025 (same day)
+
+name: "single-network-security-implementation"
+version: "2025-08-06"
+status: "deprecated"
+archive_reason: "Created before discovering TP-Link Deco X20 DSL lacks VPN server and access control features"
+
+description: |
+  DEPRECATED: This plan was created as a fallback when VLANs were discovered
+  to be unsupported, but further investigation revealed the router lacks
+  additional required features:
+  - No VPN server capability
+  - No access control groups  
+  - No advanced firewall rules
+  - Very limited configuration options
+  
+  This plan is invalid and requires complete redesign.
+
+hardware_limitations_discovered:
+  router: "TP-Link Deco X20 DSL"
+  limitations:
+    - "No internal VLAN support"
+    - "No VPN server functionality"  
+    - "No access control groups"
+    - "No advanced firewall configuration"
+    - "No port forwarding advanced options"
+    - "Consumer mesh system with basic features only"
+
+original_assumptions_invalid:
+  - "Assumed VPN server could be configured on router"
+  - "Assumed access control rules could isolate IoT devices"
+  - "Assumed advanced port forwarding was available"
+  - "Assumed firewall rules could be customized"
+
+phases:
+  phase1_dns:
+    status: "completed"
+    notes: "Successfully implemented - DNS server operational"
+    
+  phase2_security:
+    status: "invalid"
+    reason: "Router lacks required security features"
+
+archive_info:
+  archived_by: "Network deployment team"
+  archive_date: "2025-08-06"
+  lifespan: "< 1 day (created and archived same day)"
+  archive_reason: "Plan based on incorrect hardware capability assumptions"
+  
+  next_steps:
+    - "Complete router capability assessment"
+    - "Research software-defined security solutions"
+    - "Consider router replacement options"
+    - "Develop interim security measures using available features"
+
+# This plan attempted to work around VLAN limitations but
+# discovered even more fundamental limitations in the router
+# A completely different approach is required
+
+required_new_approach:
+  - "Software-defined security on DoggPack infrastructure"
+  - "Third-party VPN solutions (Tailscale, WireGuard, etc.)"
+  - "Application-level access controls"
+  - "Router replacement planning for future VLAN implementation"
+  - "Cloudflare Zero Trust for external access"
